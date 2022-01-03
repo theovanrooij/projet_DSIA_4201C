@@ -15,22 +15,21 @@ class BoxV2Spider(scrapy.Spider):
         all_links = []
         weeks = []
         
-        #for interval in response.xpath('//td[@class="a-text-left mojo-header-column mojo-truncate mojo-field-type-date_interval mojo-sort-column"]') :
         for interval in response.xpath('//td[contains(@class, "mojo-field-type-date_interval") and contains(@class, "a-text-left")]') :
             all_links.append(interval.css('a::attr(href)').extract_first())
             
         for link in all_links:
-            yield Request("https://www.boxofficemojo.com"+link, callback=self.parse_category,dont_filter=True)
+            yield Request("https://www.boxofficemojo.com"+link, callback=self.parse_weekend,dont_filter=True)
             
             
-    def parse_category(self, response):
+    def parse_weekend(self, response):
         
         week = response.xpath('//h1[@class="mojo-gutter"]/text()').extract_first()
            
         for i,tr in enumerate(response.xpath('//table/tr')):
              if i != 0 :
                     datas = tr.xpath('.//text()').extract()
-                    
+                    releaseID = tr.css('a::attr(href)').extract_first().split("/")[2]
                     yield BoxofficeItem( 
                         week= week[len(week)-2:],
                         rank=datas[0],
@@ -42,5 +41,7 @@ class BoxV2Spider(scrapy.Spider):
                         nbCinemas=datas[5],
                         cinemasDiff=datas[6],
                         nbWeeks=datas[9],
-                        distributor=datas[10]
+                        distributor=datas[10],
+                        releaseID = releaseID
                     )
+                    

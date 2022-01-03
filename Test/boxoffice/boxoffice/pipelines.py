@@ -38,7 +38,7 @@ class BoxofficePipeline:
             if percent :
                 return float(value.rstrip('%').lstrip("+"))
             else:
-                return int(value)
+                return int(value.replace(",",""))
         else:
             return np.NaN
         

@@ -21,5 +21,6 @@ class BoxofficeItem(scrapy.Item):
     cinemasDiff = scrapy.Field()
     nbWeeks = scrapy.Field()
     distributor = scrapy.Field()
+    releaseID = scrapy.Field()
 
 
