@@ -9,7 +9,7 @@ import scrapy
 class BoxofficeItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    
+    year = scrapy.Field()
     week = scrapy.Field()
     rank = scrapy.Field()
     rank_last_week = scrapy.Field()

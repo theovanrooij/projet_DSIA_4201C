@@ -11,7 +11,7 @@ import numpy as np
 
 class BoxofficePipeline:
     def process_item(self, item, spider):
-        
+        item["year"]  = int(item["year"])
         item["rank"] = int(item["rank"])
         item["week"] = int(item["week"])
         item["nbWeeks"] = int(item["nbWeeks"])

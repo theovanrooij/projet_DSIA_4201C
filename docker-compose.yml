@@ -28,6 +28,7 @@ services:
       dockerfile: Dockerfile
     image: projet_image
     container_name: app
+    restart: always
     ports:
       - "8050:8050"
     links: 
