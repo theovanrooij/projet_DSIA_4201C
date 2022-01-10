@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongo_app
+    ports:
+        - 27017:27017
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - ./data/mongo:/data/db
+  scrapy:
+    build: .
+    container_name: scrapy
+    ports:
+     - "8888:8888"
+    command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+    links: 
+      - mongo
+    volumes:
+      - ./:/home/dev/code/
+
+  flask:
+    build:
+      context: ./app/
+      dockerfile: Dockerfile
+    image: projet_image
+    container_name: app
+    ports:
+      - "8050:8050"
+    links: 
+      - mongo
+    volumes:
+      - ./app:/home/flask
+    environment:
+      FLASK_ENV: development
