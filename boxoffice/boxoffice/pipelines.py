@@ -16,34 +16,40 @@ class BoxofficePipeline:
         item["week"] = int(item["week"])
         item["nbWeeks"] = int(item["nbWeeks"])
         
-        item["rank_last_week"] = self.checkNA(item["rank_last_week"])
+        item["rank_last_week"] = checkNA(item["rank_last_week"])
         
-        item["nbCinemas"] = self.checkNA(item["nbCinemas"])
+        item["nbCinemas"] = checkNA(item["nbCinemas"])
         
-        item["cinemasDiff"] = self.checkNA(item["cinemasDiff"])
+        item["cinemasDiff"] = checkNA(item["cinemasDiff"])
         
-        item["boxDiff"] = self.checkNA(item["boxDiff"],True)
+        item["boxDiff"] = checkNA(item["boxDiff"],True)
         
         if item["distributor"] == "-" :
             
             item["distributor"] = "Inconnu"
         
-        item["boxoffice"] = self.clean_money(item["boxoffice"])
-        item["boxoffice_cumul"] = self.clean_money(item["boxoffice_cumul"])
+        item["recettes"] = clean_money(item["recettes"])
+        item["recettes_cumul"] = clean_money(item["recettes_cumul"])
         
         return item
 
-    def checkNA(self,value,percent=False):
-        if value != "-" :
-            if percent :
-                return float(value.rstrip('%').lstrip("+"))
-            else:
-                return int(value.replace(",",""))
+def checkNA(value,percent=False):
+    if value not in ["-",None] :
+        if percent :
+            return float(value.rstrip('%').lstrip("+"))
         else:
-            return np.NaN
+            return int(value.replace(",",""))
+    else:
+        return np.NaN
         
-    def clean_money(self,money):
-        return int(money.replace("$","").replace(",",""))
+def clean_money(money):
+    if money[0] == "€" :
+        
+        multiplicateur = 1.13
+        
+    else : 
+        multiplicateur = 1
+    return int(multiplicateur * int(money.split(" ")[0].replace("$","").replace(",","").replace("€","")))
         
 import pymongo
 
@@ -66,7 +72,12 @@ class MongoPipeline(object):
     
     
 #### IMDB ITEMS
-
+def checkNone(value):
+    if value not in [None] :
+        return float(value)
+    else : 
+        return np.NaN
+    
 class IMDBPipeline:
     def process_item(self, item, spider):
         
@@ -81,27 +92,57 @@ class IMDBPipeline:
         
         item["director"] = self.clean_name(item["director"])
         
-        item["note"] = float(item["note"])
+        item["note"] = checkNone(item["note"])
+        
+        if item["runningTime"] != None :
+            time = item["runningTime"].replace(" ","").split("hr")
+            if len(time)>=2 :
+                hour = time[0]
+                mins = time[1].split("min")[0]
+                if mins =="":
+                    mins=0
+                item["runningTime"] = int(time[0])*60+int(mins)
+            else :
+                item["runningTime"] = time[0].replace("min","")
+        else:
+            item["runningTime"] = np.NaN
+    
+        if item["genres"] != None :
+            item["genres"]= [genre for genre in item["genres"].replace(" ","").split("\n") if genre]
+
+        item["recettes_inter"] = clean_money(item["recettes_inter"])
+         
+        if item["budget"] == None :
+            item["budget"] = np.NaN
         
         return item
 
    
         
     def clean_name(self,name):
-        return name.lstrip(" ").rstrip("\n")
+        if name != None:
+            return name.lstrip(" ").rstrip("\n")
+        else : return name
     
 class MongoPipelineIMDB(object):
 
-    collection_name = 'imdb_items'
+    collection_name = 'scrapy_items'
 
     def open_spider(self, spider):
         self.client = pymongo.MongoClient("mongo_app")
-        self.db = self.client["imdb"]
-        self.db[self.collection_name].delete_many({})
+        self.db = self.client["boxoffice"]
 
     def close_spider(self, spider):
         self.client.close()
 
     def process_item(self, item, spider):
-        self.db[self.collection_name].insert(dict(item),check_keys=False)
+        print(item["releaseID"])
+        self.db[self.collection_name].update_many(
+    {
+        "releaseID": item["releaseID"] },
+        {
+            "$set":  dict(item) 
+        }
+)
+        #self.db[self.collection_name].insert(dict(item),check_keys=False)
         return item

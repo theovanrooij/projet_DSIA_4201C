@@ -7,6 +7,9 @@ from dash.dependencies import Input, Output
 import plotly_express as px
 from flask import Flask
 
+
+def format_money(money):
+    return '${:,.2f}'.format(money)
 ### APP ###
 app = dash.Dash(__name__)
 server = app.server
@@ -45,13 +48,21 @@ database = client['boxoffice']
 collection_box = database['scrapy_items']
 
 def getMovieRanking(year=2021):
-    cur = collection_box.aggregate([{"$group" : {"_id" : "$movie", "Recettes totales" : {"$max" : "$boxoffice_cumul"}}},{ "$sort" : { "Recettes totales" : -1 } }])
+    cur = list(collection_box.aggregate([  {"$match":
+    {'year': int(year)} },
+        {"$group" : {"_id" : {"movie":"$movie","rlid":"$releaseID"}, "Recettes totales" : {"$max" : "$boxoffice_cumul"}}},{ "$sort" : { "Recettes totales" : -1 } }]))
 
+    if len(cur) == 0 :
+        cur = list(collection_box.aggregate([{"$group" : {"_id" : {"movie":"$movie","rlid":"$releaseID"},"Recettes totales" : {"$max" : "$boxoffice_cumul"}}},{ "$sort" : { "Recettes totales" : -1 } }]))
     movie_ranking = list()
-    for movie in list(cur):
-        movie_ranking.append(html.Li(movie["_id"]+" "+str(movie["Recettes totales"])))
+    print(cur[0:10])
+    for movie in cur:
+        movie_ranking.append(html.Li(
+            children=[html.A(movie["_id"]["movie"],href='/movie-detail/'+movie["_id"]["rlid"]),format_money(movie["Recettes totales"])]
+            ))
     
     return movie_ranking
+
 
 def getMovieRankingLayout(year=2021) :
     return html.Div(
@@ -61,19 +72,23 @@ def getMovieRankingLayout(year=2021) :
         ]
     )
 
+def getMovieDetail(release_id):
+
+    return None
 # Update the index
 @app.callback(dash.dependencies.Output('page-content', 'children'),
               [dash.dependencies.Input('url', 'pathname')])
 def display_page(pathname):
     split_path  = pathname.split("/")
-    print(split_path)
+
     if split_path[1] == 'movie-ranking':
         if  (len(split_path)  >=3):
             year = split_path[2]
         else :
-            
             year=2021
         return getMovieRankingLayout(year)
+    elif split_path[1] == 'movie-detail':
+        return  getMovieDetail(split_path[2])
     else:
         return accueil_layout
     # You could also return a 404 "URL not found" page here
