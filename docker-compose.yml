@@ -11,9 +11,10 @@ services:
       - MONGO_LOG_DIR=/dev/null
     volumes:
       - ./data/mongo:/data/db
-  scrapy:
+      
+  notebook:
     build: .
-    container_name: scrapy
+    container_name: notebook
     ports:
      - "8888:8888"
     command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
