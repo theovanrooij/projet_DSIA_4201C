@@ -37,9 +37,10 @@ class IMDBItem(scrapy.Item):
     releaseDate =scrapy.Field()
     genres = scrapy.Field()
     recettes_inter = scrapy.Field()
+    recettes_totales = scrapy.Field()
     budget  =  scrapy.Field()
     country_origin =   scrapy.Field()
-    synopsis  = scrapy.Field()
+    resume  = scrapy.Field()
     poster  = scrapy.Field()
     mainCast = scrapy.Field()
     

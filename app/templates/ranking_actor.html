@@ -1,0 +1,14 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block content %} <!--remplace le contenu du bloc content-->
+
+
+{% include 'select_form.html' %}
+
+<h1>{{ title }}</h1>
+<ol>
+{% for elt in list %}
+    <li><a href='/actor-detail/{{ elt["_id"]["actor"] }}/{{ elt["_id"]["actorId"] }}'>{{ elt["_id"]["actor"] }}</a>  | {{ format_money( elt["recettes"]) }}  </li>
+{% endfor %}
+</ol>
+{% endblock %} <!--remplace le contenu du bloc content-->

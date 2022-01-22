@@ -1,10 +1,11 @@
 {% extends "base.html" %} <!--reprend le contenu de la template base.html-->
 {% block title %} {{ title }} {% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/css/movie_detail.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
 {% block content %} <!--remplace le contenu du bloc content-->
 
-<h1>{{details[0]["title"]}}</h1>
+<h1>{{details[0]["title"] }}</h1>
 
-<img src='{{ details[0]["poster"]}}' alt="Poster">
+<img src='{{ details[0]["poster"]}}' alt="Poster" class="poster">
 
 <ul>
 
@@ -13,7 +14,8 @@
     <li>Note : {{details[0]["note"]}}</li>
     <li>Budget : {{ details[0]["budget"] }}</li>
     <li>Recettes internationales : {{ format_money(details[0]["recettes_inter"]) }}</li>
-    <li>Synopsis : {{details[0]["synopsis"]}}</li>
+    <li>Recettes en France : {{ format_money(details[0]["recettes_totales"]) }}</li>
+    <li>Résumé : {{details[0]["resume"] | safe}}</li>
     <li>Genres : {{details[0]["genres"]}}</li>
     <li>Date de sortie : {{details[0]["releaseDate"]}}</li>
     <li>Pays d'origine : {{details[0]["country_origin"]}}</li>
@@ -30,9 +32,9 @@
     </tr>
     {% for actor in details[0]["cast"] %}
     <tr>
-        <td><img src='{{ details[0]["cast"][actor][1]}}' alt="Photo de  l'acteur"></td>
-        <td>{{ actor }}</td>
-        <td> {{ details[0]["cast"][actor][0]}}</td>
+        <td><img src='{{ actor["img_link"]}}' alt="Photo de  l'acteur" class="actor_picture"></td>
+        <td><a href='/actor-detail/{{actor["name"] }}/{{ actor["actorId"]}}'>{{actor["name"]}}</a> </td>
+        <td> {{actor["role"]}}</td>
         
     </tr>
     {% endfor %}

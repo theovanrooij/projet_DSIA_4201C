@@ -13,7 +13,11 @@ class BoxofficePipeline:
     def process_item(self, item, spider):
         item["week_year"] = item["week"] + " - " + item["year"]
         item["year"]  = int(item["year"])
-        item["rank"] = int(item["rank"])
+        
+        if item["rank"] == "-" :
+            item["rank"] = 0
+        else : 
+            item["rank"] = int(item["rank"])
         item["week"] = int(item["week"])
         
         
@@ -84,12 +88,14 @@ def checkNone(value):
 class IMDBPipeline:
     def process_item(self, item, spider):
         
-        new_cast = dict()
+        new_cast = list()
         old_cast = item["cast"]
         
-        for actor in old_cast.keys():
-            if actor != None :
-                new_cast[self.clean_name(actor)] = old_cast[actor]
+        for actor in old_cast:
+            if actor["name"] != None :
+                actor["name"] = self.clean_name(actor["name"])
+                new_cast.append(actor)
+            
                         
         item["cast"] = new_cast
         
@@ -114,14 +120,26 @@ class IMDBPipeline:
             item["genres"]= [genre for genre in item["genres"].replace(" ","").split("\n") if genre]
 
         item["recettes_inter"] = clean_money(item["recettes_inter"])
+        item["recettes_totales"] = clean_money(item["recettes_totales"])
+        
          
         if item["budget"] == None :
             item["budget"] = np.NaN
         
         
         for actor in item["cast"] :
-            if item["cast"][actor][1] == None:
-                    item["cast"][actor][1] = "https://m.media-amazon.com/images/S/sash/N1QWYSqAfSJV62Y.png"
+            if actor["img_link"] == None:
+                    actor["img_link"] = "https://m.media-amazon.com/images/S/sash/N1QWYSqAfSJV62Y.png"
+            else : 
+                actor["img_link"] = actor["img_link"].split("V1")[0] + "V1.png"
+                
+        for actor in item["mainCast"] :
+            if actor["img_link"] == None:
+                    actor["img_link"] = "https://m.media-amazon.com/images/S/sash/N1QWYSqAfSJV62Y.png"
+            else : 
+                       
+                actor["img_link"] = actor["img_link"].split("V1")[0] + "V1.png"
+                
                     
         if item["poster"] != None :
             item["poster"] = item["poster"].split("V1")[0] + "V1.png"

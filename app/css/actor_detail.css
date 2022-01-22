@@ -1,0 +1,22 @@
+.actor_picture { width: 100px;}
+
+.list_container {
+    display: flex;
+    flex-wrap: wrap;
+}
+.elt_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px;
+    border: 1px lightgrey solid;
+    width: 200px;
+    text-align: center;
+}
+.poster {
+    width: 200px;
+}
+
+.actor_detail {
+    width: 300px;
+}

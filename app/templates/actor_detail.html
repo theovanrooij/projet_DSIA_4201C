@@ -1,0 +1,25 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/css/actor_detail.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block content %} <!--remplace le contenu du bloc content-->
+
+
+<h1>{{ actorName }}</h1>
+<img src="{{details['_id']['img_link']}}" alt="Photo de {{actorName}}" class="actor_picture"> 
+<p>Argent généré en France par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_fr) }}</p> <br>
+<p>Argent généré à l'international par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_inter) }}</p> <br>
+<p>Genre dans lequel il a plus joué : {{genres_counter}}</p><br>
+
+
+<div class="list_container">
+
+{% for elt in details["movies"] %}
+    <a  href="/movie-detail/{{ elt['rlid'] }}"  class="elt_container">
+        <img src="{{elt['poster']}}" alt="Poster de {{elt['title']}}" class="poster">
+        {{elt["title"]}}
+    </a>
+    
+{% endfor %}
+
+</div>
+{% endblock %} <!--remplace le contenu du bloc content-->

@@ -11,15 +11,16 @@
 <div class="list_container">
 
 {% for elt in list %}
-    <a  href="/movie-detail/{{ elt['_id']['rlid'] }}"  class="elt_container">
-        <h2 class="elt_title">{{elt["_id"]["title"]}}</h2>
-        <img src='{{ elt["_id"]["poster"]}}' alt="Poster" class="poster">
-        <div  class="movie_infos">{{format_time( elt["_id"]["runningTime"])}} |  {{elt["_id"]["director"]}} | {{elt["_id"]["releaseDate"]}} </div>
-        <p class="resume">
-            <b>Résumé : </b>{{elt["_id"]["resume"]}}
+ {{elt}}
+    <div class="elt_container" >
+        <a class="elt_title" href="/actor-detail/{{actor}}/{{elt['_id']['actorId']}}" >{{actor}}</a>
+        <img src="{{elt['_id']['img_link']}}" alt="">
+        <p>| 
+            {% for movie in elt["movies"] %}  
+                <a  href="/movie-detail/{{ movie['rlid'] }}"> {{ movie["title"] }} </a> | 
+            {% endfor %}
         </p>
-        
-    </a>
+    </div>
 
 {% endfor %}
 

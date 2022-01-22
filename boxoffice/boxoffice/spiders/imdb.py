@@ -1,4 +1,5 @@
 import scrapy
+import json
 from scrapy import Request
 from ..items import IMDBItem
 
@@ -13,6 +14,12 @@ class ImdbSpider(scrapy.Spider):
     }
 
     
+    def  getActorId(self,url):
+        actorId = url
+        if actorId != None :
+            actorId = actorId.split("/")[2].split("?")[0]
+        return actorId
+    
     def __init__(self, *args, **kwargs):
         
         
@@ -25,7 +32,7 @@ class ImdbSpider(scrapy.Spider):
         
         self.start_urls = ["https://www.boxofficemojo.com/release/"+release+"/weekend/" for release in releases_all]
         
-        #self.start_urls = ["https://www.boxofficemojo.com/release/rl2869659137/weekend/"]
+        #self.start_urls = ["https://www.boxofficemojo.com/release/rl798721537/weekend/"]
         
         super().__init__(**kwargs)  # python3
         
@@ -45,10 +52,10 @@ class ImdbSpider(scrapy.Spider):
             if content[0] in ["Release Date","Earliest Release Date"]:
                 req.meta["releaseDate"] =content[1]
             if content[0] == "Running Time":
-                
                 req.meta["runningTime"] =content[1]
         
         req.meta["recettes_inter"] = response.css(".mojo-performance-summary-table :nth-child(4) .money::text").extract_first()
+        req.meta["recettes_totales"] = response.css(".mojo-performance-summary-table :nth-child(2) .money::text").extract_first()
         
        
         
@@ -64,13 +71,17 @@ class ImdbSpider(scrapy.Spider):
         req.meta["genres"]  = response.meta.get("genres") 
         req.meta["runningTime"]  = response.meta.get("runningTime") 
         req.meta["recettes_inter"]  = response.meta.get("recettes_inter") 
-        req.meta["synopsis"] = response.css("meta[name='description']::attr(content)").get()
+        req.meta["recettes_totales"]  = response.meta.get("recettes_totales") 
+        #req.meta["synopsis"] = response.css("meta[name='description']::attr(content)").get()
+        req.meta["resume"] = json.loads(response.css("script[type='application/ld+json']::text").extract_first())["description"]
         req.meta["poster"] = response.css(".ipc-media--poster-l>img::attr(src)").extract_first()
+        
         
         mainCast =list()
         
-        for mainActor in  response.css(".StyledComponents__CastItemSummary-sc-y9ygcu-9.hLoKtW>a::text").extract():
-            mainCast.append(mainActor)
+        #for mainActor in  response.css(".StyledComponents__CastItemSummary-sc-y9ygcu-9.hLoKtW>a"):
+        for mainActor in  response.css(".StyledComponents__CastItemWrapper-sc-y9ygcu-7.esVIGD"):
+            mainCast.append({"name":mainActor.css("::text").extract_first(),"actorId":self.getActorId(mainActor.css("a::attr(href)").extract_first()) , "img_link":mainActor.css("img::attr(src)").extract_first()})
 
         req.meta["mainCast"] = mainCast
         
@@ -88,11 +99,13 @@ class ImdbSpider(scrapy.Spider):
         
     def parse_credits(self, response):
         director = response.css("#director+table a::text").extract_first()
-        cast = dict()
+        cast = list()
         
         for actor in response.css(".cast_list>tr"):
             
-            cast[actor.css(".primary_photo+td>a::text").extract_first()] = [actor.css(".character>a::text").extract_first(),actor.css("img::attr(loadlate)").extract_first()]
+
+                cast.append({"name":actor.css(".primary_photo+td>a::text").extract_first(), "role" :actor.css(".character>a::text").extract_first(),"img_link":actor.css("img::attr(loadlate)").extract_first(),"actorId":self.getActorId(actor.css("a::attr(href)").extract_first())
+                })
             
         yield IMDBItem(title = response.meta.get("title"),
                         note = response.meta.get("note"),
@@ -102,10 +115,11 @@ class ImdbSpider(scrapy.Spider):
                         releaseDate=response.meta.get("releaseDate") ,
                         runningTime = response.meta.get("runningTime"),
                         recettes_inter = response.meta.get("recettes_inter"),
+                       recettes_totales = response.meta.get("recettes_totales"),
                         budget = response.meta.get("budget"),
                         country_origin = response.meta.get("country_origin"),
                         releaseID  = response.meta.get("releaseID"),
-                       synopsis  = response.meta.get("synopsis"),
+                       resume  = response.meta.get("resume"),
                        poster = response.meta.get("poster"),
                        mainCast = response.meta.get("mainCast")
                       )
