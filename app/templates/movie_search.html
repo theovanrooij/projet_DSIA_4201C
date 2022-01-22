@@ -1,0 +1,19 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block content %} <!--remplace le contenu du bloc content-->
+
+{% include 'select_form.html' %}
+
+
+<h1>{{ title }}</h1>
+Coucou
+{{ movie_list}}
+{% for elt in movie_list %}
+
+    <div class="movie">
+        {{elt}}
+    </div>
+
+{% endfor %}
+
+{% endblock %} <!--remplace le contenu du bloc content-->

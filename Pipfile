@@ -4,8 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+numpy = "*"
+pandas = "*"
+pymongo = "*"
+Flask = "*"
+Flask-Cors = "*"
+Flask-WTF = "*"
+Scrapy = "*"
+jupyter ="*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"

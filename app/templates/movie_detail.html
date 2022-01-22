@@ -1,0 +1,50 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %} {{ title }} {% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block content %} <!--remplace le contenu du bloc content-->
+
+<h1>{{details[0]["title"]}}</h1>
+
+<img src='{{ details[0]["poster"]}}' alt="Poster">
+
+<ul>
+
+    <li>Durée : {{format_time(details[0]["runningTime"])}}</li>
+    <li>Distributeur : {{details[0]["distributor"]}}</li>
+    <li>Note : {{details[0]["note"]}}</li>
+    <li>Budget : {{ details[0]["budget"] }}</li>
+    <li>Recettes internationales : {{ format_money(details[0]["recettes_inter"]) }}</li>
+    <li>Synopsis : {{details[0]["synopsis"]}}</li>
+    <li>Genres : {{details[0]["genres"]}}</li>
+    <li>Date de sortie : {{details[0]["releaseDate"]}}</li>
+    <li>Pays d'origine : {{details[0]["country_origin"]}}</li>
+    
+</ul>
+
+<h3>Cast</h3>
+<table>
+    <tr>
+        <td></td>
+        <td>Acteur</td>
+        <td> Role</td>
+        
+    </tr>
+    {% for actor in details[0]["cast"] %}
+    <tr>
+        <td><img src='{{ details[0]["cast"][actor][1]}}' alt="Photo de  l'acteur"></td>
+        <td>{{ actor }}</td>
+        <td> {{ details[0]["cast"][actor][0]}}</td>
+        
+    </tr>
+    {% endfor %}
+</table>
+
+
+<div id='chart' class='chart'”></div>
+
+<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+<script type='text/javascript'>
+  var graphs = {{graphJSON | safe}};
+  Plotly.plot('chart',graphs,{});
+</script>
+
+{% endblock %} <!--remplace le contenu du bloc content-->

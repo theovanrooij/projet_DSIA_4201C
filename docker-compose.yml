@@ -11,18 +11,14 @@ services:
       - MONGO_LOG_DIR=/dev/null
     volumes:
       - ./data/mongo:/data/db
-      
+
   notebook:
     build: .
-    container_name: notebook
     ports:
      - "8888:8888"
     command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
-    links: 
-      - mongo
     volumes:
       - ./:/home/dev/code/
-
   flask:
     build:
       context: ./app/

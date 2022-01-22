@@ -25,7 +25,7 @@ class ImdbSpider(scrapy.Spider):
         
         self.start_urls = ["https://www.boxofficemojo.com/release/"+release+"/weekend/" for release in releases_all]
         
-        #self.start_urls = ["https://www.boxofficemojo.com/release/rl1023116289/weekend/"]
+        #self.start_urls = ["https://www.boxofficemojo.com/release/rl2869659137/weekend/"]
         
         super().__init__(**kwargs)  # python3
         
@@ -64,7 +64,15 @@ class ImdbSpider(scrapy.Spider):
         req.meta["genres"]  = response.meta.get("genres") 
         req.meta["runningTime"]  = response.meta.get("runningTime") 
         req.meta["recettes_inter"]  = response.meta.get("recettes_inter") 
+        req.meta["synopsis"] = response.css("meta[name='description']::attr(content)").get()
+        req.meta["poster"] = response.css(".ipc-media--poster-l>img::attr(src)").extract_first()
         
+        mainCast =list()
+        
+        for mainActor in  response.css(".StyledComponents__CastItemSummary-sc-y9ygcu-9.hLoKtW>a::text").extract():
+            mainCast.append(mainActor)
+
+        req.meta["mainCast"] = mainCast
         
         for item in  response.css(".ipc-metadata-list__item"):
             content = item.css("::text").extract()
@@ -82,21 +90,25 @@ class ImdbSpider(scrapy.Spider):
         director = response.css("#director+table a::text").extract_first()
         cast = dict()
         
-        #for actor in response.xpath('//table[contains(@class, "cast_list")]//tbody//tr'):
         for actor in response.css(".cast_list>tr"):
-            cast[actor.css(".primary_photo+td>a::text").extract_first()] = [actor.css(".character>a::text").extract_first(),actor.css("img::attr(src)").extract_first()]
+            
+            cast[actor.css(".primary_photo+td>a::text").extract_first()] = [actor.css(".character>a::text").extract_first(),actor.css("img::attr(loadlate)").extract_first()]
             
         yield IMDBItem(title = response.meta.get("title"),
-                       note = response.meta.get("note"),
-                       director = director,
-                       cast = cast,
-                       genres=response.meta.get("genres"),
-                       releaseDate=response.meta.get("releaseDate") ,
-                       runningTime = response.meta.get("runningTime"),
-                       recettes_inter = response.meta.get("recettes_inter"),
-                       budget = response.meta.get("budget"),
-                       country_origin = response.meta.get("country_origin"),
-                         releaseID  = response.meta.get("releaseID"))
+                        note = response.meta.get("note"),
+                        director = director,
+                        cast = cast,
+                        genres=response.meta.get("genres"),
+                        releaseDate=response.meta.get("releaseDate") ,
+                        runningTime = response.meta.get("runningTime"),
+                        recettes_inter = response.meta.get("recettes_inter"),
+                        budget = response.meta.get("budget"),
+                        country_origin = response.meta.get("country_origin"),
+                        releaseID  = response.meta.get("releaseID"),
+                       synopsis  = response.meta.get("synopsis"),
+                       poster = response.meta.get("poster"),
+                       mainCast = response.meta.get("mainCast")
+                      )
            
         
         

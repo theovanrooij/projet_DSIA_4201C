@@ -11,6 +11,7 @@ class BoxofficeItem(scrapy.Item):
     # name = scrapy.Field()
     year = scrapy.Field()
     week = scrapy.Field()
+    week_year = scrapy.Field()
     rank = scrapy.Field()
     rank_last_week = scrapy.Field()
     title = scrapy.Field()
@@ -22,6 +23,7 @@ class BoxofficeItem(scrapy.Item):
     nbWeeks = scrapy.Field()
     distributor = scrapy.Field()
     releaseID = scrapy.Field()
+    
 
 
 class IMDBItem(scrapy.Item):
@@ -37,4 +39,7 @@ class IMDBItem(scrapy.Item):
     recettes_inter = scrapy.Field()
     budget  =  scrapy.Field()
     country_origin =   scrapy.Field()
+    synopsis  = scrapy.Field()
+    poster  = scrapy.Field()
+    mainCast = scrapy.Field()
     

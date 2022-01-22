@@ -11,9 +11,12 @@ import numpy as np
 
 class BoxofficePipeline:
     def process_item(self, item, spider):
+        item["week_year"] = item["week"] + " - " + item["year"]
         item["year"]  = int(item["year"])
         item["rank"] = int(item["rank"])
         item["week"] = int(item["week"])
+        
+        
         item["nbWeeks"] = int(item["nbWeeks"])
         
         item["rank_last_week"] = checkNA(item["rank_last_week"])
@@ -115,6 +118,14 @@ class IMDBPipeline:
         if item["budget"] == None :
             item["budget"] = np.NaN
         
+        
+        for actor in item["cast"] :
+            if item["cast"][actor][1] == None:
+                    item["cast"][actor][1] = "https://m.media-amazon.com/images/S/sash/N1QWYSqAfSJV62Y.png"
+                    
+        if item["poster"] != None :
+            item["poster"] = item["poster"].split("V1")[0] + "V1.png"
+        
         return item
 
    
@@ -136,7 +147,6 @@ class MongoPipelineIMDB(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        print(item["releaseID"])
         self.db[self.collection_name].update_many(
     {
         "releaseID": item["releaseID"] },
