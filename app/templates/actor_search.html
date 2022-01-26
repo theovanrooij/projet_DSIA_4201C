@@ -1,20 +1,17 @@
 {% extends "base.html" %} <!--reprend le contenu de la template base.html-->
 {% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
-{% block css %}<link rel="stylesheet" href="/css/movie_search.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/static/search.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
 {% block content %} <!--remplace le contenu du bloc content-->
 
-{% include 'select_form.html' %}
+<div class="title_div"><h1>{{ title }}</h1> {% include 'select_form.html' %}</div>
 
-
-<h1>{{ title }}</h1>
 
 <div class="list_container">
 
 {% for elt in list %}
- {{elt}}
     <div class="elt_container" >
         <a class="elt_title" href="/actor-detail/{{actor}}/{{elt['_id']['actorId']}}" >{{actor}}</a>
-        <img src="{{elt['_id']['img_link']}}" alt="">
+        <img src="{{elt['_id']['img_link']}}" alt="Photo de {{actor}}" class="elt_picture">
         <p>| 
             {% for movie in elt["movies"] %}  
                 <a  href="/movie-detail/{{ movie['rlid'] }}"> {{ movie["title"] }} </a> | 

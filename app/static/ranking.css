@@ -1,0 +1,32 @@
+table {
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+tr{
+    background-color: #fff;
+    border: 1px black solid;
+    border-radius: 10px;
+    margin : 10px 0;
+    display: flex;
+    width: 80vw;
+    padding: 10px;
+    position: relative;
+}
+
+.rank{
+    width: 50px;
+}
+.title{
+    width: 50%;
+}
+.rlDate {
+    width: 10%;
+}
+.recettes{
+    position: absolute;
+    right: 20px;
+}
+

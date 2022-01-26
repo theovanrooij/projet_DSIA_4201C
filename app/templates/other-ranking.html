@@ -1,0 +1,33 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block content %} <!--remplace le contenu du bloc content-->
+
+<div class="title_div"><h1>{{ title }}</h1> {% include 'select_form.html' %}</div>
+
+<div class="charts">
+    
+    <div id='genres_chart' class='chart'></div>
+    <div id='note_chart' class='chart'></div>
+    <div id='week_chart' class='chart'></div>
+    <div id='distributor_chart' class='chart'></div>
+</div>
+
+<script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+<script type='text/javascript'>
+
+  var graphs = {{graphJSON_genres | safe}};
+  Plotly.plot('genres_chart',graphs,{});
+
+  graphs = {{graphJSON_note | safe}};
+  Plotly.plot('note_chart',graphs,{});
+
+  graphs = {{graphJSON_week | safe}};
+  Plotly.plot('week_chart',graphs,{});
+
+  graphs = {{graphJSON_distributor | safe}};
+  Plotly.plot('distributor_chart',graphs,{});
+
+
+</script>
+
+{% endblock %} <!--remplace le contenu du bloc content-->

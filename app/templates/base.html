@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="/static/style.css">
     {% block css %}{% endblock %}
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
     <header>
+        <a href="/" class="link_header" id="accueil">Accueil</a>
         <a href="/movie-ranking" class="link_header" id="movie_rankings">Classement  des films</a>
         <a href="/movie-search" class="link_header" id="movie_search">Recherche de films</a>
         <a href="/actor-search" class="link_header" id="acteur_search">Recherche d'acteurs</a>
@@ -20,6 +21,6 @@
         
         {% endblock %}</div>
 
-    <footer>Application par Méline Dang et Théo Van Rooij - <a href="https://github.com/theovanrooij/projet_DSIA_4201C">https://github.com/theovanrooij/projet_DSIA_4201C</a></footer>
+    <footer><p>Application par Méline Dang et Théo Van Rooij - <a href="https://github.com/theovanrooij/projet_DSIA_4201C">https://github.com/theovanrooij/projet_DSIA_4201C</a></p></footer>
 </body>
 </html>

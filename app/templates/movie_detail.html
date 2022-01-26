@@ -1,52 +1,71 @@
 {% extends "base.html" %} <!--reprend le contenu de la template base.html-->
-{% block title %} {{ title }} {% endblock %} <!--remplace le contenu du bloc title de base-->
-{% block css %}<link rel="stylesheet" href="/css/movie_detail.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block title %} {{ details[0]["title"] }} {% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/static/details.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
 {% block content %} <!--remplace le contenu du bloc content-->
 
-<h1>{{details[0]["title"] }}</h1>
 
-<img src='{{ details[0]["poster"]}}' alt="Poster" class="poster">
+<div class="summary">
+    <img src='{{ details[0]["poster"]}}' alt="Poster" class="poster">
+    <div class="summary_text">
+        <h1>{{details[0]["title"] }}</h1>
+        <ul class="summary_list">
+            <li>Durée : {{format_time(details[0]["runningTime"])}}</li>
+            <li>Distributeur : {{details[0]["distributor"]}}</li>
+            <li>Note : {{details[0]["note"]}}</li>
+            <li>Budget : {{ details[0]["budget"] }}</li>
+            <li>Recettes internationales : {{ format_money(details[0]["recettes_inter"]) }}</li>
+            <li>Recettes en France : {{ format_money(details[0]["recettes_totales"]) }}</li>
+            <li>Résumé : {{details[0]["resume"] | safe}}</li>
+            <li>Genres : {{ ', '.join(details[0]["genres"])}}</li>
+            <li>Date de sortie : {{details[0]["releaseDate"]}}</li>
+            <li>Pays d'origine : {{details[0]["country_origin"]}}</li>
+            
+        </ul>
+    </div>
+</div>
 
-<ul>
 
-    <li>Durée : {{format_time(details[0]["runningTime"])}}</li>
-    <li>Distributeur : {{details[0]["distributor"]}}</li>
-    <li>Note : {{details[0]["note"]}}</li>
-    <li>Budget : {{ details[0]["budget"] }}</li>
-    <li>Recettes internationales : {{ format_money(details[0]["recettes_inter"]) }}</li>
-    <li>Recettes en France : {{ format_money(details[0]["recettes_totales"]) }}</li>
-    <li>Résumé : {{details[0]["resume"] | safe}}</li>
-    <li>Genres : {{details[0]["genres"]}}</li>
-    <li>Date de sortie : {{details[0]["releaseDate"]}}</li>
-    <li>Pays d'origine : {{details[0]["country_origin"]}}</li>
+
+<div class="charts">
     
-</ul>
-
-<h3>Cast</h3>
-<table>
-    <tr>
-        <td></td>
-        <td>Acteur</td>
-        <td> Role</td>
-        
-    </tr>
-    {% for actor in details[0]["cast"] %}
-    <tr>
-        <td><img src='{{ actor["img_link"]}}' alt="Photo de  l'acteur" class="actor_picture"></td>
-        <td><a href='/actor-detail/{{actor["name"] }}/{{ actor["actorId"]}}'>{{actor["name"]}}</a> </td>
-        <td> {{actor["role"]}}</td>
-        
-    </tr>
-    {% endfor %}
-</table>
-
-
-<div id='chart' class='chart'”></div>
+    <div id='recettes_cumul_chart' class='chart'”></div>
+    <div id='recettes_chart' class='chart'”></div>
+    <div id='rank_chart' class='chart'”></div>
+    {% if graphJSON_cinemas  %}
+    <div id='cinemas_chart' class='chart'”></div>
+    {% endif %}
+</div>
 
 <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
 <script type='text/javascript'>
-  var graphs = {{graphJSON | safe}};
-  Plotly.plot('chart',graphs,{});
+
+  var graphs = {{graphJSON_cumul | safe}};
+  Plotly.plot('recettes_cumul_chart',graphs,{});
+
+  var graphs = {{graphJSON_recettes | safe}};
+  Plotly.plot('recettes_chart',graphs,{});
+
+  var graphs = {{graphJSON_rank | safe}};
+  Plotly.plot('rank_chart',graphs,{});
+
+  var graphs = {{graphJSON_cinemas | safe}};
+  Plotly.plot('cinemas_chart',graphs,{});
 </script>
+
+
+
+<h2>Cast :</h2>
+
+<div class="list_container">
+    {% for elt in details[0]["cast"] %}
+        <a href='/actor-detail/{{elt["name"] }}/{{ elt["actorId"]}}' class="elt_container">
+            <img src='{{ elt["img_link"]}}' alt="Photo de  l'acteur" class="elt_picture">
+            <span>{{elt["name"]}}</span> <br>
+            as : {{elt["role"]}}
+        </a>
+    {% endfor %}
+</div>
+
+
 
 {% endblock %} <!--remplace le contenu du bloc content-->

@@ -1,19 +1,17 @@
 {% extends "base.html" %} <!--reprend le contenu de la template base.html-->
 {% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
-{% block css %}<link rel="stylesheet" href="/css/movie_search.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/static/search.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
 {% block content %} <!--remplace le contenu du bloc content-->
 
-{% include 'select_form.html' %}
 
-
-<h1>{{ title }}</h1>
+<div class="title_div"><h1>{{ title }}</h1> {% include 'select_form.html' %}</div>
 
 <div class="list_container">
 
 {% for elt in list %}
     <a  href="/movie-detail/{{ elt['_id']['rlid'] }}"  class="elt_container">
         <h2 class="elt_title">{{elt["_id"]["title"]}}</h2>
-        <img src='{{ elt["_id"]["poster"]}}' alt="Poster" class="poster">
+        <img src='{{ elt["_id"]["poster"]}}' alt="Poster" class="elt_picture">
         <div  class="movie_infos">{{format_time( elt["_id"]["runningTime"])}} |  {{elt["_id"]["director"]}} | {{elt["_id"]["releaseDate"]}} </div>
         <p class="resume">
             <b>Résumé : </b>{{elt["_id"]["resume"]}}

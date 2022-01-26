@@ -1,0 +1,49 @@
+body {
+    background-color: rgb(187, 180, 180);
+    
+}
+
+a {
+    color: rgb(87, 131, 172);
+    text-decoration: none;
+}
+
+header {
+    display: flex;
+    justify-content: space-around;
+}
+header a {
+    background-color: rgb(243, 225, 225);
+    border: 1px black solid;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+#content {
+    min-height: 85vh;
+}
+.title_div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+footer {
+    position: relative;
+    bottom: 0;
+    display: flex;
+    width: 95vw;
+    justify-content: space-around;
+}
+
+
+.chart{
+    width: 35vw;
+    border: 1px solid black;
+    margin-top: 50px;
+}
+.charts {
+    
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}

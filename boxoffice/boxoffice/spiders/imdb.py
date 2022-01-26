@@ -32,14 +32,14 @@ class ImdbSpider(scrapy.Spider):
         
         self.start_urls = ["https://www.boxofficemojo.com/release/"+release+"/weekend/" for release in releases_all]
         
-        #self.start_urls = ["https://www.boxofficemojo.com/release/rl798721537/weekend/"]
+        #self.start_urls = ["https://www.boxofficemojo.com/release/rl3309339905/weekend/"]
         
         super().__init__(**kwargs)  # python3
         
     def parse(self, response):
         id_movie= response.css(".a-box-inner").css("a::attr(href)").extract_first().split("/")[4]
         
-        req = Request("https://www.imdb.com/title/"+id_movie, callback=self.parse_main,dont_filter=True)
+        req = Request("https://www.imdb.com/title/"+id_movie+"/?ref_=nv_sr_srsg_0", callback=self.parse_main,dont_filter=True)
         req.meta["movieID"] = id_movie
         req.meta["releaseID"]  = response.request.url.split("/")[4]
         
@@ -73,9 +73,11 @@ class ImdbSpider(scrapy.Spider):
         req.meta["recettes_inter"]  = response.meta.get("recettes_inter") 
         req.meta["recettes_totales"]  = response.meta.get("recettes_totales") 
         #req.meta["synopsis"] = response.css("meta[name='description']::attr(content)").get()
-        req.meta["resume"] = json.loads(response.css("script[type='application/ld+json']::text").extract_first())["description"]
+        try :
+            req.meta["resume"] = json.loads(response.css("script[type='application/ld+json']::text").extract_first())["description"]
+        except KeyError:
+            req.meta["resume"] =  response.css('meta[name="description"]::attr(content)').extract_first()
         req.meta["poster"] = response.css(".ipc-media--poster-l>img::attr(src)").extract_first()
-        
         
         mainCast =list()
         
