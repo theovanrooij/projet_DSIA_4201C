@@ -18,11 +18,6 @@ for year in range(2010,2022) :
     years_possible.append({'label':str(year),'value':str(year)})
 
 
-import pymongo
-client = pymongo.MongoClient("mongo_app")
-database = client['boxoffice']
-collection = database['scrapy_items']
-
 @app.context_processor
 def utility_processor():
     def format_money(money):
@@ -437,11 +432,16 @@ def page_not_found(e):
     return 'Nothing to see here'
 
 
+def loginDataBase():
+    
+    import pymongo
+    client = pymongo.MongoClient("mongo_app")
+    database = client['boxoffice']
+    collection = database['scrapy_items']
+    return collection
+
+
+
 if __name__ == '__main__':
+    collection = loginDataBase()
     app.run(debug=True,host="0.0.0.0" ,port=8050) 
-
-
-
-
-
-    # RELANCER SCRAPP ET V2RIFIE QUE TOUT OK puis finir ranking acteur

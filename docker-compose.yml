@@ -1,9 +1,8 @@
 version: '3'
 
 services:
-  mongo:
+  mongo_app:
     image: mongo
-    container_name: mongo_app
     ports:
         - 27017:27017
     environment:
@@ -19,6 +18,12 @@ services:
     command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
     volumes:
       - ./:/home/dev/code/
+
+  mongo-seed:
+    build: ./mongo
+    depends_on:
+      - mongo_app
+
   flask:
     build:
       context: ./app/
@@ -28,8 +33,8 @@ services:
     restart: always
     ports:
       - "8050:8050"
-    links: 
-      - mongo
+    depends_on: 
+      - mongo_app
     volumes:
       - ./app:/home/flask
     environment:

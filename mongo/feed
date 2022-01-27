@@ -1,0 +1,3 @@
+curl https://perso.esiee.fr/~vanrooit/DataEngineering/scrapy_items.bson --output /data.bson
+
+mongorestore --host mongo_app -d boxoffice -c scrapy_items /data.bson

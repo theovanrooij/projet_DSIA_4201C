@@ -88,17 +88,6 @@ def checkNone(value):
 class IMDBPipeline:
     def process_item(self, item, spider):
         
-        new_cast = list()
-        old_cast = item["cast"]
-        
-        for actor in old_cast:
-            if actor["name"] != None :
-                actor["name"] = self.clean_name(actor["name"])
-                new_cast.append(actor)
-            
-                        
-        item["cast"] = new_cast
-        
         item["director"] = self.clean_name(item["director"])
         
         item["note"] = checkNone(item["note"])

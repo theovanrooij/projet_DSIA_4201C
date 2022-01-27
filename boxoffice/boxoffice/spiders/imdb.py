@@ -30,9 +30,9 @@ class ImdbSpider(scrapy.Spider):
 
         releases_all = list(collection_box.distinct("releaseID"))
         
-        self.start_urls = ["https://www.boxofficemojo.com/release/"+release+"/weekend/" for release in releases_all]
+        #self.start_urls = ["https://www.boxofficemojo.com/release/"+release+"/weekend/" for release in releases_all]
         
-        #self.start_urls = ["https://www.boxofficemojo.com/release/rl3309339905/weekend/"]
+        self.start_urls = ["https://www.boxofficemojo.com/release/rl3309339905/weekend/"]
         
         super().__init__(**kwargs)  # python3
         
@@ -112,7 +112,6 @@ class ImdbSpider(scrapy.Spider):
         yield IMDBItem(title = response.meta.get("title"),
                         note = response.meta.get("note"),
                         director = director,
-                        cast = cast,
                         genres=response.meta.get("genres"),
                         releaseDate=response.meta.get("releaseDate") ,
                         runningTime = response.meta.get("runningTime"),
