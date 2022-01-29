@@ -1,3 +1,4 @@
+from datetime import datetime
 from time import sleep
 from flask import Flask, flash, send_from_directory,redirect, render_template, request, url_for
 import pandas as pd
@@ -123,7 +124,7 @@ def getActorDetail(actorName,actorId):
         {"cast.actorId":actorId},
     ]}},
         {"$group" : {"_id" : {"actorId":"$cast.actorId","actor":"$cast.actor","img_link": "$cast.img_link"}, "movies": {"$addToSet": {"title":"$title","rlid":"$releaseID",
-                                                                                                                                    "poster":"$poster","recettes_totales":"$recettes_totales",
+                                                                                                                                    "poster":"$poster","rlDate":"$releaseDate","recettes_totales":"$recettes_totales",
                                                                                                                                     "recettes_inter":"$recettes_inter","genres":"$genres"},
                                                                                                                        }}}]))
     return cur[0]
@@ -235,21 +236,21 @@ def movie_detail(rlId):
     fig = px.line(df, x="week_year", y="recettes_cumul", title='Recettes cumulée par semaine',labels={
                      "recettes_cumul": "Recettes cumulées, en $",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_cumul = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     fig = px.line(df, x="week_year", y="recettes", title='Recettes par semaine',labels={
                      "recettes": "Recettes de la semaine, en $",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_recettes = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     fig = px.line(df, x="week_year", y="rank", title='Evolution du classement par semaine',labels={
                      "rank": "Classement",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_rank = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     if (df['nbCinemas'].isnull().values.any()):
@@ -259,7 +260,7 @@ def movie_detail(rlId):
         fig = px.line(df, x="week_year", y="nbCinemas", title='Evolution du nombre de cinémas projetant le film par semaine',labels={
                         "nbCinemas": "Nombre de cinémas",
                         "week_year": "Numéro et année de la semaine"
-                    })  
+                    }, markers=True)  
         graphJSON_cinemas = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template('movie_detail.html', details=details,graphJSON_cumul=graphJSON_cumul,graphJSON_recettes=graphJSON_recettes,graphJSON_rank=graphJSON_rank,graphJSON_cinemas=graphJSON_cinemas)
@@ -313,11 +314,17 @@ def actor_search():
     return render_template('actor_search.html',title=title, form=form,actor=text,list=list)
 
 
+def orderMovieDetail(movies):
+    movies = sorted(movies, key=lambda d: datetime.strptime(d["rlDate"], '%b %d, %Y'),reverse=True)     
+    return movies
+
 @app.route('/actor-detail/<actorName>/<actorId>')
 def actor_detail(actorName,actorId):
 
 
     details = getActorDetail(actorName,actorId)
+
+    details["movies"] = orderMovieDetail(details["movies"])
 
     genres_list = []
     for movie in details["movies"]:
@@ -342,7 +349,7 @@ def actor_detail(actorName,actorId):
     fig = px.line(df, x="_id", y="recettes", title='Recettes générée par an',labels={
                      "recettes": "Recettes, en $",
                      "_id": "Année"
-                 })  
+                 }, markers=True)  
     graphJSON_evolution = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
