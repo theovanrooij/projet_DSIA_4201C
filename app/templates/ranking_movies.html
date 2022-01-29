@@ -15,8 +15,8 @@
     {% for elt in list %}
         <tr>
             <td class="rank">{{ loop.index }}</td>
-            <td class="title"><a href='/movie-detail/{{ elt["_id"]["rlid"] }}'>{{ elt["_id"]["title"] }}</a></td>
-            <td class="rlDate">{{ elt["_id"]["rlDate"] }}</td>
+            <td class="title"><a href='/movie-detail/{{ elt["_id"] }}'>{{ elt["title"] }}</a></td>
+            <td class="rlDate">{{ elt["rlDate"] }}</td>
             <td class="recettes">{{format_money( elt["Recettes totales"])}}</td>
         </tr>
     {% endfor %}
