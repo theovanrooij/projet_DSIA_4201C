@@ -3,3 +3,4 @@ flask
 plotly_express
 flask_wtf
 flask_bootstrap
+scrapy

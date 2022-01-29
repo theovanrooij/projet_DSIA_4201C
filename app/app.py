@@ -1,11 +1,13 @@
-from flask import Flask, flash, send_from_directory, render_template, request, url_for
+from datetime import datetime
+from time import sleep
+from flask import Flask, flash, send_from_directory,redirect, render_template, request, url_for
 import pandas as pd
 import json
 import plotly
 import plotly.express as px
 from collections import Counter
 from itertools import chain
-
+import os
 from forms import yearForm,textForm
 
 
@@ -34,16 +36,41 @@ def utility_processor():
 
 
 def getMovieRanking(year=2021):
-    if int(year)<2007 :
+    year = int(year)
+    if year<2007 :
         year_dict = {'year': {"$gt": 0}}
     else : 
-        year_dict  = {'year': int(year)}
+        year_dict  = {'year': year}
+        year_dict_sub  = {'year': year-1}
 
-    cur = list(collection.aggregate([  
+    movieMain = list(collection.aggregate([  
         {"$match": year_dict },
-        {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID","rlDate":"$releaseDate"}, "Recettes totales" : { "$first":"$recettes_totales"} }},
+        {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID","rlDate":"$releaseDate"},"recettes":{"$max":"$recettes_cumul"}}},
+        {"$group" : {"_id" : "$_id.rlid","title":{ "$first": "$_id.title" },"Recettes totales":{ "$first": "$recettes" },"rlDate":{ "$first": "$_id.rlDate" }}},
         { "$sort" : { "Recettes totales" : -1 } }
             ]))
+
+    if year > 2007 :
+        movie_id = [movie["_id"]for movie in movieMain]
+        movieSub = list(collection.aggregate([  
+            {"$match": year_dict_sub },
+            {"$match": {"releaseID":{"$in":movie_id}} },
+            {"$group" : {"_id" :"$releaseID", "Recettes totales":{"$max":"$recettes_cumul"} }},
+            { "$sort" : { "Recettes totales" : -1 } }
+                ]))
+        
+    # 2022 - 2021
+
+
+        dfSub = pd.DataFrame(movieSub)
+
+        dfMain = pd.DataFrame(movieMain)
+        df = dfMain.merge(dfSub,how="left", on="_id")
+        df["Recettes totales_y"] = df["Recettes totales_y"].fillna(0) 
+        df["Recettes totales"] = df["Recettes totales_x"] - df["Recettes totales_y"]
+        cur = df.sort_values(by="Recettes totales",ascending=False).drop(columns=["Recettes totales_x","Recettes totales_y"]).to_dict(orient="records")
+    else :
+        cur = list(movieMain)
 
     return cur
 
@@ -97,7 +124,7 @@ def getActorDetail(actorName,actorId):
         {"cast.actorId":actorId},
     ]}},
         {"$group" : {"_id" : {"actorId":"$cast.actorId","actor":"$cast.actor","img_link": "$cast.img_link"}, "movies": {"$addToSet": {"title":"$title","rlid":"$releaseID",
-                                                                                                                                    "poster":"$poster","recettes_totales":"$recettes_totales",
+                                                                                                                                    "poster":"$poster","rlDate":"$releaseDate","recettes_totales":"$recettes_totales",
                                                                                                                                     "recettes_inter":"$recettes_inter","genres":"$genres"},
                                                                                                                        }}}]))
     return cur[0]
@@ -126,60 +153,31 @@ def getSumRecettesActor(actorName,actorId):
 
 
 def getActorRanking(year):
-    if int(year)<2007 :
+    year=int(year)
+    if year<2007 :
         year_dict = {'year': {"$gt": 0}}
     else : 
-        year_dict  = {'year': int(year)}
+        year_dict  = {'year': year}
 
-    cur =list(collection.aggregate( [
-        {"$match" :year_dict},
-    {
-     "$unwind": { "path": "$mainCast" }
-    },
-    {
-     "$group":
-       {
-         "_id": {"actor":"$mainCast.name","actorId":"$mainCast.actorId"},
-           "movies" :{
-               "$addToSet" : {"title":"$title","recettes":"$recettes_totales"}
-           }
-       }
-    },
-     {
-         "$unwind": "$movies"
-     }
-    ,
-    {
-     "$group":
-       {
-         "_id": {"actor":"$_id.actor","actorId":"$_id.actorId"},
-           "recettes" :{
-               "$sum" : "$movies.recettes"
-           }
-       }
-    },
-    { "$sort" : { "recettes" : -1 } }
-    
-    ] ))
+    main =list(collection.aggregate( [
+            {"$match" :year_dict},
+        {"$unwind": { "path": "$mainCast" }},
+        {"$group":{
+            "_id": {"actor":"$mainCast.name","actorId":"$mainCast.actorId"}, "movies" :{
+                "$addToSet" : {"title":"$title","rlId":"$releaseID"}}}
+        }
+        ] ))
 
-    return cur
+    movie_ranking = pd.DataFrame(getMovieRanking(2021))
 
+    for actor in main :
+        recettes = 0
+        for movie in actor["movies"] :
+            recettes += movie_ranking.query("_id == '"+movie["rlId"]+"'")["Recettes totales"].values[0]
+        actor["recettes"] = recettes
+    main = sorted(main, key=lambda d: d['recettes'],reverse=True) 
+    return main
 
-def getRecettesByGenres(year):
-
-    if int(year)<2007 :
-        year_dict = {'year': {"$gt": 0}}
-    else : 
-        year_dict  = {'year': int(year)}
-
-    cur = list(collection.aggregate([  {"$match": year_dict },
-     {
-     "$unwind": { "path": "$genres" }
-    },   
-        {"$group" : {"_id" : {"rlId":"$releaseID","genres":"$genres"},"recettes":{"$sum":"$recettes"} }},
-      {"$group" : {"_id" : "$_id.genres","recettes_totales":{"$sum":"$recettes"}} },
-      {"$sort":{"recettes_totales":-1}}]))
-    return cur
 
 def getRecettesByNote(year):
     if int(year)<2007 :
@@ -238,21 +236,21 @@ def movie_detail(rlId):
     fig = px.line(df, x="week_year", y="recettes_cumul", title='Recettes cumulée par semaine',labels={
                      "recettes_cumul": "Recettes cumulées, en $",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_cumul = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     fig = px.line(df, x="week_year", y="recettes", title='Recettes par semaine',labels={
                      "recettes": "Recettes de la semaine, en $",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_recettes = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
     fig = px.line(df, x="week_year", y="rank", title='Evolution du classement par semaine',labels={
                      "rank": "Classement",
                      "week_year": "Numéro et année de la semaine"
-                 })  
+                 }, markers=True)  
     graphJSON_rank = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     if (df['nbCinemas'].isnull().values.any()):
@@ -262,7 +260,7 @@ def movie_detail(rlId):
         fig = px.line(df, x="week_year", y="nbCinemas", title='Evolution du nombre de cinémas projetant le film par semaine',labels={
                         "nbCinemas": "Nombre de cinémas",
                         "week_year": "Numéro et année de la semaine"
-                    })  
+                    }, markers=True)  
         graphJSON_cinemas = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template('movie_detail.html', details=details,graphJSON_cumul=graphJSON_cumul,graphJSON_recettes=graphJSON_recettes,graphJSON_rank=graphJSON_rank,graphJSON_cinemas=graphJSON_cinemas)
@@ -316,11 +314,17 @@ def actor_search():
     return render_template('actor_search.html',title=title, form=form,actor=text,list=list)
 
 
+def orderMovieDetail(movies):
+    movies = sorted(movies, key=lambda d: datetime.strptime(d["rlDate"], '%b %d, %Y'),reverse=True)     
+    return movies
+
 @app.route('/actor-detail/<actorName>/<actorId>')
 def actor_detail(actorName,actorId):
 
 
     details = getActorDetail(actorName,actorId)
+
+    details["movies"] = orderMovieDetail(details["movies"])
 
     genres_list = []
     for movie in details["movies"]:
@@ -345,7 +349,7 @@ def actor_detail(actorName,actorId):
     fig = px.line(df, x="_id", y="recettes", title='Recettes générée par an',labels={
                      "recettes": "Recettes, en $",
                      "_id": "Année"
-                 })  
+                 }, markers=True)  
     graphJSON_evolution = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
@@ -429,7 +433,7 @@ def other_ranking():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return 'Nothing to see here'
+    return redirect("/")
 
 
 def loginDataBase():

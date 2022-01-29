@@ -1,0 +1,29 @@
+#!/bin/bash
+dl_feed () { 
+    curl https://perso.esiee.fr/~vanrooit/DataEngineering/nb.txt --output /home/data/nb.txt
+    curl https://perso.esiee.fr/~vanrooit/DataEngineering/scrapy_items.bson --output /home/data/data.bson
+    mongorestore --host mongo_app -d boxoffice -c scrapy_items /home/data/data.bson 
+}
+
+
+online=$(curl https://perso.esiee.fr/~vanrooit/DataEngineering/nb.txt)
+
+
+FILE=/home/data/nb.txt
+
+if test -f "$FILE"; then
+    local=$(head -n 1 $FILE)
+    if (( $online > $local )); then
+       echo "need update"
+       dl_feed
+    fi
+    else
+    echo "need feeding"
+    dl_feed
+fi
+
+# On vient dl les dernières modifs
+pwd
+cd /home/scrapy_folder & python launchSpider.py
+
+

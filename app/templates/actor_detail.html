@@ -32,6 +32,7 @@
     <a  href="/movie-detail/{{ elt['rlid'] }}"  class="elt_container">
         <img src="{{elt['poster']}}" alt="Poster de {{elt['title']}}" class="elt_picture">
         <span>{{elt["title"]}}</span>
+        <p>{{elt["rlDate"]}}</p>
     </a>
     
 {% endfor %}
