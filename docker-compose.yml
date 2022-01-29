@@ -11,18 +11,20 @@ services:
     volumes:
       - ./data/mongo:/data/db
 
-  notebook:
-    build: .
-    ports:
-     - "8888:8888"
-    command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
-    volumes:
-      - ./:/home/dev/code/
+  # notebook:
+  #   build: .
+  #   ports:
+  #    - "8888:8888"
+  #   command: ["pipenv", "run", "jupyter", "notebook", "--ip=0.0.0.0", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+  #   volumes:
+  #     - ./:/home/dev/code/
 
   mongo-seed:
     build: ./mongo
     depends_on:
       - mongo_app
+    volumes:
+      - ./app/mongo_data:/home/data
 
   flask:
     build:
@@ -35,6 +37,7 @@ services:
       - "8050:8050"
     depends_on: 
       - mongo_app
+      - mongo-seed
     volumes:
       - ./app:/home/flask
     environment:
