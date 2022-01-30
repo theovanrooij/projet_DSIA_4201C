@@ -22,7 +22,7 @@ Pour lancer notre application il suffit d'éxécuter les commandes suivantes :
     $:~/<WORKDIR> > docker-compose up -d
 
 
-Nous vous conseillons de lancer l'application et de profiter du temps de construction (build) pour lire la documentation suivante.
+Nous vous conseillons de lancer l'application et de profiter du temps de construction (build) pour lire la documentation suivante. Une fois le buid terminé, le lancement de l'application peut prrendre un peu de temps car elle met à jour automatiquement la base  de  données. Tant qu'il n'y a pas d'erreur dans les logs du container le fait que l'application  ne soit pas lancé est normal.
 
 Rendez-vous ensuite sur `http://localhost:8050 <http://localhost:8050/>`_
 
