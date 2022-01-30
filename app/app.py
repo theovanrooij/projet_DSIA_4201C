@@ -915,7 +915,7 @@ def other_ranking():
     recettesGenre = getRecettesByGenres(year)
     df = pd.DataFrame(recettesGenre)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par genre',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par genre',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Genre"
                  })  
@@ -926,7 +926,7 @@ def other_ranking():
     recettesNote = getRecettesByNote(year)
     df = pd.DataFrame(recettesNote)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par note IMDB',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par note IMDB',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Note"
                  })  
@@ -936,7 +936,7 @@ def other_ranking():
     recettesWeek = getRecettesByWeek(year)
     df = pd.DataFrame(recettesWeek)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par semaine de l\'année',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par semaine de l\'année',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Semaine"
                  })  

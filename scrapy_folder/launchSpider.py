@@ -19,13 +19,14 @@ database = client['boxoffice']
 collection = database['scrapy_items']
 
 
-# #La base de données ne s'est pas mise à jour avec la dernière vcersion disponible
+# On attend que la base de données est finie de se mettre à jour
 while int(nbDocumentsVoulu[0]) > collection.count_documents({}) :
     print("Database is restoring")
     sleep(5)
     
 
 
+#   On lance nos deux spiders pour mettre à jour la BDD
 from boxoffice.spiders.imdb import ImdbSpider
 from boxoffice.spiders.boxoffice import BoxOfficeSpider
 

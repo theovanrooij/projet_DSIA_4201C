@@ -1,7 +1,8 @@
 
 Projet de DataEngineering
-auteurs : DANG Méline et VAN ROOIJ Théo
 =========================
+auteurs : DANG Méline et VAN ROOIJ Théo
+
 
 
 Nous avons choisi d'étudier les données de BoxOffice en France. Ces données sont issues du site suivant :
@@ -24,6 +25,9 @@ Pour lancer notre application il suffit d'éxécuter les commandes suivantes :
 Nous vous conseillons de lancer l'application et de profiter du temps de construction (build) pour lire la documentation suivante.
 
 Rendez-vous ensuite sur `http://localhost:8050 <http://localhost:8050/>`_
+
+Il se peut que parfoiis les fichiers bash ne s'éxécute pas correctement et génère des erreurs dans les logs de app et mongo_feed. Cela est du au différents formats de sauvegarde entre windows et linux. Il faut donc forcer le format LF pour *app/launchApp* et *mongo_feed/feed*. 
+Tutoriel pour le faire : https://dev.to/wagslane/how-to-get-consistent-line-breaks-in-vs-code-lf-vs-crlf-2c3p
 
 Developper guide
 ================
