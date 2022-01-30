@@ -4,11 +4,12 @@ from time import sleep
 
 
 
-# # read nb and compare, if inferior, launch update else run app
+# Regarde si le fichier contenant le nombre de documents voulu existe. 
 while not os.path.isfile("/home/mongo_data/nb.txt"):
     print("Does not exist")
     sleep(1)
 
+# Regarde si le fichier contenant le nombre de documents voulu existe. 
 with open('/home/mongo_data/nb.txt') as f:
     nbDocumentsVoulu = f.readlines()
 

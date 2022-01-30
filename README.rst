@@ -20,6 +20,8 @@ Pour lancer notre application rien de plus que d'éxécuter les commandes suivan
     $:~/<WORKDIR> > docker-compose up -d
 
 
+Nous vous conseillons de lancer l'applicatiion et de profiter du temps de build pour lire la documentation suivante.
+
 Developper guide
 ================
 
@@ -39,10 +41,50 @@ Notre projet comporte deux spiders :
     - boxoffice vient scrap le site `https://www.boxofficemojo.com/ <https://www.boxofficemojo.com/>`_
     - imdb vient scrap le site `https://www.imdb.com/ <https://www.imdb.com/>`_
 
+La spider boxoffice est la première à être éxécuté et vientt récupéré les données concernant les recettes pour chacune des semaines, à partir de la dernière semaine ayant été scrap (on récupère cette infomation depuis la base de données).
+Une fois cette spider exécutée, imdb prend le relais en venant récupéré l'id des release (=version d'un film) dont les informations complémentaires sont manquantes afin d'allez les scrap sur le site `https://www.imdb.com/ <https://www.imdb.com/>`_
+
+
 Structure d'un document de la base de données
 ---------------------------------------------
+Les données précédemment récupérées sont stockées dans une base de données mongoDB. Nous avons choisi de n'utiliser qu'une seule collection et la structure d'un de ses documents est la suivantes (chaque document correspond a un film sur une semaine précise) : 
 
+    - year : Année de la semaine scrap
+    - week : Semaine venant d'être scrap
+    - week_year : Combinaison des deux champs précédents
+    - rank : Classement sur la semaine en question
+    - rank_last_week : Classement la semaine précédente 
+    - title : Titre du film
+    - recettes : Recettes en France sur la semaine en question
+    - boxDiff : Evolution des recettes par rapport à la semaine précédene
+    - recettes_cumul : Recettes en France en cumulé entre la date de sortie et la semaine en question
+    - nbCinemas : Nombre de cinémas diffusant le film pour cette semaine
+    - cinemasDiff : Différence du nombre de cinémas pa rapport à la semaine précédente
+    - nbWeeks : Nombre de semaines depuis la première semaine de diffusion
 
+    Les champs suivants sont issus de l'ajout de données depuis imdb : 
+
+    - distributor : Studio de cinéma du film
+    - releaseID : Id de la release (version du film)
+    - budget
+    - cast : Liste contenant chaque acteur du film avec les champs suivants pour chacun d'entre eux :
+    - - name
+    - - role
+    - - actorId
+    - - img_link : Lien vers une photo de l'acteur
+    - note : Note IMDB du film
+
+    - country_origin
+    - director : Réalisateur
+    - genres : Liste contenant les genres du film
+    - poster : Lien vers l'affiche du film
+    - recettes_inter : Recettes totales en incluant l'International sur toute la durée d'exploitation du film (y compris les semaines futures)
+    - recettes_totales : Recettes totales en France sur toute la durée d'exploitation du film (y compris les semaines futures)
+    - releasedate : Date de sortie
+    - resume : Résumé de l'intrigue
+    
+    - runningTime : Durée du film
+    
 Fonctionnement des containers Docker
 ------------------------------------
 
@@ -59,21 +101,6 @@ Tous les containers, à l'exception de "mongo" contiennent un DockerFile présen
 Les containers "app" et "mongo_feed" se lancent chacun sur un fichier bash permettaant le lancement des actions nécessaire au bon fonctionnement de l'application.
 
 Comme expliqué précédemment le fichier bash de "mongo_feed" vient peupler la base de données. Au lancement de "app", le fichier launchApp est éxécuté. ce fichier va éxécuter deux scripts python. Le premier, launchSpider.py présent dans scrapy_folder, va vérifier que la base de données est complète puis va venir réaliser un nouveau scrap pour les semaines ayant eu lieu depuis la dernière mise à jour. Une fois ce scrap réalisé, le script bash vient lancer notre application en éxécutant app.py, présent dans le dossier app.
-
-
-
-- scrapy_folder contient les deux spiiders + fichier permettant le scrapping auto
- - box office commence par récupérer toutes les données concernant les recettes engendrés
- - imdb va ensuite récupéré tous les ids de films récupérés précédemment et scraap imdb pour ajouter donnée complémentaire
-
-une seule collection est utilisé
-structure d'un document : 
- - title
- - id de la release
- - ...
-
-mongo_feed = docker file + fichier bash permettant le téléchargement de la dernièire backup de la BDD
-
 
 User Guide
 ==========
