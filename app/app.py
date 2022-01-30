@@ -173,6 +173,7 @@ def searchMovies(searchName):
     cur  = list(collection.aggregate( [{"$match": {"title": {'$regex':  searchName} }  },{"$group" : {"_id" : {"title":"$title","rlid":"$releaseID", "runningTime":"$runningTime","poster":"$poster","resume":"$resume", "director":"$director", "releaseDate":"$releaseDate"}}},{ "$sort" : { "_id.title" : 1 } }]))
     return cur
 
+
 """
     Permet d'effectuer une recherche pour retrouver un(e) acteur/actrice.
 
@@ -275,7 +276,7 @@ def getRealisateurDetail(directorName,directorId):
                                                                                                                        }}}]))
     return cur[0]
   
-  """
+"""
     Permet d'afficher l'évolution des recettes de l'acteur/actrice voulu en France.
 
     Args:
@@ -775,7 +776,7 @@ def actor_detail(actorName,actorId):
 
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-realisateur
+
     fig = px.bar(df, x="year", y="recettes", title='Recettes générées par an',labels={
                      "recettes": "Recettes, en $",
                      "year": "Année"
