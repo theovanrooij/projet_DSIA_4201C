@@ -1,4 +1,4 @@
-=========================
+
 Projet de DataEngineering
 auteurs : DANG Méline et VAN ROOIJ Théo
 =========================
@@ -23,6 +23,7 @@ Pour lancer notre application il suffit d'éxécuter les commandes suivantes :
 
 Nous vous conseillons de lancer l'application et de profiter du temps de construction (build) pour lire la documentation suivante.
 
+Rendez-vous ensuite sur `http://localhost:8050 <http://localhost:8050/>`_
 
 Developper guide
 ================
