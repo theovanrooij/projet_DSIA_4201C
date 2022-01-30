@@ -206,8 +206,6 @@ def searchActor(actorName):
         - l'argent généré en France par les films dans lequel il/elle est un(e) acteur/actrice principal(e) ; 
         - film(s) dans le(s)quel(s) il/elle a fait une apparition (triés dans l'ordre anti-chronologique) ; 
         - répartition de ses genres de films dans le(s)quel(s) il/elle a joué ;
-        - un graphique de ses recettes générées par ans.
-
 
     Args:
 
@@ -243,7 +241,7 @@ def getActorDetail(actorName,actorId):
 
 
 """
-    Permet d'afficher l'évolution de l'acteur/actrice voulu en France.
+    Permet d'afficher l'évolution des recettes de l'acteur/actrice voulu en France.
 
     Args:
 
@@ -251,10 +249,11 @@ def getActorDetail(actorName,actorId):
         actorId : ID de l'acteur/actrice (puisque plusieurs acteurs peuvent avoir le même nom, un ID les différencie)
 
     Returns:
-        Dataframe sur l'évolution de l'acteur/actrice. ???
+        Dataframe sur l'évolution des recettes l'acteur/actrice par année
 """
 def getActorEvolution(actorName,actorId) :
-
+    
+    # On commence par récupérer touss les films dans lesquels l'acteur a joué
     cur =list(collection.aggregate( [
             {"$match":
     {"$and": [
@@ -267,14 +266,18 @@ def getActorEvolution(actorName,actorId) :
         }
         ] ))
         
+    # On récupère l'id de chaacun des films et pour chacun on vient récupérer son nom et ses recettes
     ids = [movie["rlId"] for movie in cur[0]["movies"]]
     curbis = list(collection.aggregate( [
             {"$match": {"releaseID":{"$in":ids}} },
         {"$group":{
-            "_id": {"year":"$year","title":"$title","rlId":"$releaseID"},"title":{"$first":"$title"},"year":{"$first":"$year"},"rlId":{"$first":"$releaseID"},"recettes":{"$max":"$recettes_cumul"}}},
+            "_id": {"year":"$year","title":"$title","rlId":"$releaseID"},
+            "title":{"$first":"$title"},"year":{"$first":"$year"},"rlId":{"$first":"$releaseID"},"recettes":{"$max":"$recettes_cumul"}}},
     
         ] ))
     
+    # On met tout ça dans un DataFrame puis on regarde si il y a des films en doublons
+    # Si  tel est le cas, cela signifie qu'un film est sorti en fin d'année et on retire à l'année maximale la valeur de la minimale
     df = pd.DataFrame(curbis)
     for id in ids : 
         quer = df.query("rlId == '"+id+"'")
@@ -289,7 +292,7 @@ def getActorEvolution(actorName,actorId) :
 
 
 """
-    Permet d'obtenir les recettes engendrés par un(e) acteur/actrice en France.
+    Permet d'obtenir les recettes engendrés par un(e) acteur/actrice en France et dans le monde.
 
     Args:
 
@@ -319,6 +322,7 @@ def getSumRecettesActor(actorName,actorId):
 """
 def getActorRanking(year):
     year=int(year)
+    # Si on veut toutes les aannées il suffit de faire lee somme sur chaaque film
     if year<2007 :
         year_dict = {'year': {"$gt": 0}}
         return list(collection.aggregate( [
@@ -352,6 +356,7 @@ def getActorRanking(year):
 
         ] ))
     else : 
+        # En revanche si on étudie une année partiiculière on vient récupérer la liste des films de l'année puis leur recettes sur cette année avec la fonction getMovieRanking définie précédemment
         year_dict  = {'year': year}
 
     main =list(collection.aggregate( [
@@ -365,6 +370,7 @@ def getActorRanking(year):
 
     movie_ranking = pd.DataFrame(getMovieRanking(year))
 
+    # Il ne reste après plus qu'à faire la somme des recettes et les trier
     for actor in main :
         recettes = 0
         for movie in actor["movies"] :
@@ -472,7 +478,6 @@ def getRecettesByDistributor(year):
 
 @app.route('/')
 def accueil():
-
     return render_template('accueil.html')
 
 """
@@ -511,6 +516,7 @@ def movie_detail(rlId):
                  }, markers=True)  
     graphJSON_rank = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # Permet d'afficher le graaphiique si toutes les valeurs sont présentees
     if (df['nbCinemas'].isnull().values.any()):
         graphJSON_cinemas = None
     else :
@@ -545,7 +551,7 @@ def movie_ranking():
 
 """
     Page "Recherche des films".
-    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché est ceux dans la base de données.
+    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché et ceux dans la base de données.
     Affiche les films correspondants au nom mis en recherche.
 """
 @app.route('/movie-search', methods= ['GET'])
@@ -566,7 +572,7 @@ def movie_search():
 
 """
     Page "Recherche d'acteurs".
-    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché est ceux dans la base de données.
+    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché et ceux dans la base de données.
     Affiche les acteurs correspondants au nom mis en recherche.
 """
 @app.route('/actor-search', methods= ['GET'])
@@ -606,16 +612,20 @@ def actor_detail(actorName,actorId):
     for movie in details["movies"]:
         genres_list.append(movie["genres"])
 
-    genres_counter = Counter(list(chain(*genres_list)))
+    
 
     sum_recettes_fr = sum(movie["_id"]['recettes_totales'] for movie in getSumRecettesActor(actorName,actorId))
     sum_recettes_inter = sum(movie["_id"]['recettes_inter'] for movie in getSumRecettesActor(actorName,actorId))
 
+    # Dictionnaire affichant pour chaque genre le nombre de film dans lequel l'acteur a joué
+    genres_counter = Counter(list(chain(*genres_list)))
     dict_genres = {"genres" : genres_counter.keys(),"values":genres_counter.values()}
+    
     fig = px.pie(dict_genres, names="genres", values='values',title="Répartition de ses genres de films favoris",color_discrete_sequence=px.colors.sequential.RdBu)
     graphJSON_genres = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-
+    
+    # Affichage de l'évolution des recettes par année d'un acteur 
     df = getActorEvolution(actorName,actorId)
 
 
@@ -725,7 +735,7 @@ def other_ranking():
 def page_not_found(e):
     return redirect("/")
 
-
+# Permet de se connecter à la BDD
 def loginDataBase():
     
     import pymongo
