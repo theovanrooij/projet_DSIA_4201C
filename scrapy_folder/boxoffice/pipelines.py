@@ -99,7 +99,7 @@ class IMDBPipeline:
                 
         item["cast"] = new_cast
         
-        item["director"] = self.clean_name(item["director"])
+        item["director"]["name"] = self.clean_name(item["director"]["name"])
         
         item["note"] = checkNone(item["note"])
         

@@ -29,7 +29,7 @@ def getNewItems():
     
     cur = list(collection.aggregate([
         {
-          "$match": {"cast":{"$exists":False}}  
+          "$match": {"director.name":{"$exists":False}}  
         },
         {
             "$group": {"_id":"$releaseID"}
