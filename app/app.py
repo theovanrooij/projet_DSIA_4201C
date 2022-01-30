@@ -229,6 +229,22 @@ def getActorRanking(year):
         actor["recettes"] = recettes
     main = sorted(main, key=lambda d: d['recettes'],reverse=True) 
     return main
+    
+def getRecettesByGenres(year):
+
+    if int(year)<2007 :
+        year_dict = {'year': {"$gt": 0}}
+    else : 
+        year_dict  = {'year': int(year)}
+
+    cur = list(collection.aggregate([  {"$match": year_dict },
+     {
+     "$unwind": { "path": "$genres" }
+    },   
+        {"$group" : {"_id" : {"rlId":"$releaseID","genres":"$genres"},"recettes":{"$sum":"$recettes"} }},
+      {"$group" : {"_id" : "$_id.genres","recettes_totales":{"$sum":"$recettes"}} },
+      {"$sort":{"recettes_totales":-1}}]))
+    return cur
 
 
 def getRecettesByNote(year):
