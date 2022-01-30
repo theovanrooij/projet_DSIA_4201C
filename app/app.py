@@ -1,5 +1,4 @@
-
-# Importation des packages nécessaires
+#Importation des packages nécessaires.
 from datetime import datetime
 from time import sleep
 from flask import Flask, flash, send_from_directory,redirect, render_template, request, url_for
@@ -24,10 +23,10 @@ app.config['SECRET_KEY'] = 'secret key'
 
     Args:
 
-        money : somme à convertir. C'est un entier
+        money : somme à convertir. C'est un entier.
 
     Returns:
-        La somme au bon format. Type string
+        La somme au bon format. Type string.
 """
 @app.context_processor
 def utility_processor():
@@ -55,8 +54,8 @@ def utility_processor():
 
 
 """
-    Permet d'obtenir le pourcentage des recettes réalisées en France à partir de la valeur des recettes françaises et mondiales
-    Le décorateur de la fonction la rend accessible depuis les templates html
+    Permet d'obtenir le pourcentage des recettes réalisées en France à partir de la valeur des recettes françaises et mondiales.
+    Le décorateur de la fonction la rend accessible depuis les templates html.
 
     Args:
 
@@ -64,7 +63,7 @@ def utility_processor():
         recettes_inter : Recettes dans le monde
 
     Returns:
-        Le pourcentage des recettes réalisé en France
+        Le pourcentage des recettes réalisées en France.
 """
 @app.context_processor
 def utility_processor():
@@ -77,41 +76,40 @@ def utility_processor():
 
 
 """
-    Permet d'obtenir le classement des films ayant généré le plus d'argent en France pour une année choisie.
+    Permet d'obtenir le classement des films ayant générés le plus d'argent en France pour une année choisie.
 
     Args:
 
         year : Année à étudier
 
     Returns:
-        Une liste contenant ayant pour éléments les films dans l'ordre souhaité. Chaque élément est un diction contenant le nom du film, son releaseId et ses recettes
+        Une liste contenant les éléments des films dans l'ordre souhaité. Chaque élément est un dictionnaire contenant le nom du film, son releaseId et ses recettes.
 """
 def getMovieRanking(year=2022):
     
-    # On commence par générer le dictionnaire filttrant les éléments selon l'année souhaitée
+    # Nous commençons par générer le dictionnaire filtrant les éléments selon l'année souhaitée.
     year = int(year)
-    # Si l'année est inférieure à la valeur miinimale préseente dans la BDD, on sélectionne toutes les années
-    if year<2007 :
+    # Si l'année est inférieure à la valeur minimale présente dans la base de données, nous sélectionnons toutes les années.
+    if year<2007 : # La valeur minimale ici est 2007.
         year_dict = {'year': {"$gt": 0}}
     else : 
         year_dict  = {'year': year}
         year_dict_sub  = {'year': year-1}
 
-    # On commence par récupérer toutes les données de l'année passé en paramètre
+    # Nous commençons par récupérer toutes les données de l'année passée en paramètre.
     movieMain = list(collection.aggregate([  
         {"$match": year_dict },
-        # On sélectionne la valeur maxiimaale des recettes cumulée sur l'année pour chaque film
+        # Nous sélectionnons la valeur maximale des recettes cumulées sur l'année pour chaque film.
         {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID","rlDate":"$releaseDate"},"recettes":{"$max":"$recettes_cumul"}}},
-        # On dégroupe l'id pour l'exploiiterr facilement dans un DataFrame
+        # Nuos dégroupons l'ID pour l'exploiter facilement dans un DataFrame.
         {"$group" : {"_id" : "$_id.rlid","title":{ "$first": "$_id.title" },"Recettes totales":{ "$first": "$recettes" },"rlDate":{ "$first": "$_id.rlDate" }}},
         { "$sort" : { "Recettes totales" : -1 } }
             ]))
 
-    # Si on étudie une année en particulier, on vient récupérer les données de l'année précédentes pour soustraaire les recettes des fiilms sortiees en fin d'année.
-    # On fait cela car paar défaut la requetre précédente inclue les recettes des deux annéees.
+    # Si on étudie une année en particulier, nous venons récupérer les données de l'année précédente pour soustraire les recettes des films sortis en fin d'année.
+    # Nous devons faire cela car, par défaut, la requête précédente inclue les recettes des deux années.
     if year > 2008 :
         movie_id = [movie["_id"]for movie in movieMain]
-
         movieSub = list(collection.aggregate([  
             {"$match": year_dict_sub },
             {"$match": {"releaseID":{"$in":movie_id}} },
@@ -120,7 +118,7 @@ def getMovieRanking(year=2022):
                 ]))
         
 
-        # On vient ensuite réaliser la soustraction des deux années pour avoiir les réelles recettees des films chevauchant deux années
+        # Nous venons ensuite réaliser la soustraction des deux années pour avoir les réelles recettes des films chevauchant deux années.
 
         dfSub = pd.DataFrame(movieSub)
 
@@ -134,27 +132,57 @@ def getMovieRanking(year=2022):
 
     return cur
 
-
 """
-    Permet d'obtenir tous les documents d'un film en fonction de son id de release
+    Permet d'obtenir les détails (si disponibles) sur un film tels que :
+        - sa durée ;
+        - son distributeur de films ;
+        - son réalisateur ;
+        - sa note ;
+        - son budget ;
+        - ses recettes totales ; 
+        - ses recettes en France ;
+        - son pourcentage des recettes réalisées en France ;
+        - son résumé ; 
+        - son/ses genre(s) ;
+        - sa date de sortie ;
+        - son pays d'origine ;
+        - son casting.
 
     Args:
 
-        rlId : Id de la realease à récupérrer
+        rlId : release ID du film à étudier
 
     Returns:
-        Une liste contenant tous les documents d'un film
+        Une liste contenant les détails du film mentionnées (durée, distributeur, réalisateur, note, budget, recettes, résumé, genre(s), date de sortie, pays d'origine). 
 """
 def getMovieDetail(rlId):
     cur = list(collection.find({"releaseID":rlId}).sort( [("year",1),("week",1)]))
     return cur
 
+"""
+    Permet d'effectuer une recherche pour retrouver un film.
 
+    Args:
+
+        searchName : nom entré pour lequel nous allons chercher des correspondances dans les noms des films
+
+    Returns:
+        Une liste contenant les résultats de recherche du film.
+"""
 def searchMovies(searchName):
     cur  = list(collection.aggregate( [{"$match": {"title": {'$regex':  searchName} }  },{"$group" : {"_id" : {"title":"$title","rlid":"$releaseID", "runningTime":"$runningTime","poster":"$poster","resume":"$resume", "director":"$director", "releaseDate":"$releaseDate"}}},{ "$sort" : { "_id.title" : 1 } }]))
     return cur
 
+"""
+    Permet d'effectuer une recherche pour retrouver un(e) acteur/actrice.
 
+    Args:
+
+        actorName : nom entré pour lequel nous allons chercher des correspondances dans les noms des acteurs
+
+    Returns:
+        Une liste contenant les résultats de recherche des acteurs.
+"""
 def searchActor(actorName):
     if actorName == "" :
         return [0]
@@ -172,7 +200,23 @@ def searchActor(actorName):
 
     return cur
 
+"""
+    Permet d'obtenir les détails sur un(e) acteur/actrice tels que :
+        - l'argent généré au total par les films dans lequel il/elle est un(e) acteur/actrice principal(e) ; 
+        - l'argent généré en France par les films dans lequel il/elle est un(e) acteur/actrice principal(e) ; 
+        - film(s) dans le(s)quel(s) il/elle a fait une apparition (triés dans l'ordre anti-chronologique) ; 
+        - répartition de ses genres de films dans le(s)quel(s) il/elle a joué ;
+        - un graphique de ses recettes générées par ans.
 
+
+    Args:
+
+        actorName : nom de l'acteur/actrice dont nous voulons connaître les détails
+        actorId : ID de l'acteur/actrice (puisque plusieurs acteurs peuvent avoir le même nom, un ID les différencie)
+
+    Returns:
+        Une liste contenant les détails (argent généré, recettes par années, film(s) dans le(s)quel(s) il/elle a joué) de l'acteur/actrice choisi.
+"""
 def getActorDetail(actorName,actorId):
 
     if actorName == "" :
@@ -198,7 +242,17 @@ def getActorDetail(actorName,actorId):
     return cur[0]
 
 
+"""
+    Permet d'afficher l'évolution de l'acteur/actrice voulu en France.
 
+    Args:
+
+        actorName : nom de l'acteur/actrice dont nous voulons connaître les détails
+        actorId : ID de l'acteur/actrice (puisque plusieurs acteurs peuvent avoir le même nom, un ID les différencie)
+
+    Returns:
+        Dataframe sur l'évolution de l'acteur/actrice. ???
+"""
 def getActorEvolution(actorName,actorId) :
 
     cur =list(collection.aggregate( [
@@ -233,6 +287,18 @@ def getActorEvolution(actorName,actorId) :
 
     return df
 
+
+"""
+    Permet d'obtenir les recettes engendrés par un(e) acteur/actrice en France.
+
+    Args:
+
+        actorName : nom de l'acteur/actrice dont nous voulons connaître les recettes
+        actorId : ID de l'acteur/actrice (puisque plusieurs acteurs peuvent avoir le même nom, un ID les différencie)
+
+    Returns:
+        Une liste contenant les recettes de l'acteur/actrice souhaité(e).
+"""
 def getSumRecettesActor(actorName,actorId):
     if actorName == "" :
         return []
@@ -241,7 +307,16 @@ def getSumRecettesActor(actorName,actorId):
 
     return cur
 
+"""
+    Permet d'obtenir le classement de l'acteur/actrice en France pour une année choisie.
 
+    Args:
+
+        year : année à étudier
+
+    Returns:
+        Classement de l'acteur/actrice pour l'année choisie.
+"""
 def getActorRanking(year):
     year=int(year)
     if year<2007 :
@@ -298,6 +373,17 @@ def getActorRanking(year):
     main = sorted(main, key=lambda d: d['recettes'],reverse=True) 
     return main
     
+
+"""
+    Permet d'obtenir les recettes générées par genre en France pour une année choisie.
+
+    Args:
+
+        year : année à étudier
+
+    Returns:
+        Une liste contenant les recettes engendrées pour chaque genre en France selon l'année passée en argument.
+"""    
 def getRecettesByGenres(year):
 
     if int(year)<2007 :
@@ -314,7 +400,16 @@ def getRecettesByGenres(year):
       {"$sort":{"recettes_totales":-1}}]))
     return cur
 
+"""
+    Permet d'obtenir les recettes générées par note en France pour une année choisie.
 
+    Args:
+
+        year : année à étudier
+
+    Returns:
+        Une liste contenant les recettes engendrées en fonction de la note du film pour l'année sélectionnée.
+"""
 def getRecettesByNote(year):
     if int(year)<2007 :
         year_dict = {'year': {"$gt": 0}}
@@ -328,6 +423,16 @@ def getRecettesByNote(year):
 
     return cur
 
+"""
+    Permet d'obtenir les recettes générées par semaine en France pour une année choisie.
+
+    Args:
+
+        year : année à étudier
+
+    Returns:
+        Une liste contenant les recettes par semaines des films en France selon l'année sélectionnée.
+"""
 def getRecettesByWeek(year): 
     if int(year)<2007 :
         year_dict = {'year': {"$gt": 0}}
@@ -340,6 +445,15 @@ def getRecettesByWeek(year):
          {"$sort":{"_id":1}}
       ]))
 
+"""
+    Permet d'obtenir les recettes générées par distributeur de films en France pour une année choisie.
+    Args:
+
+        year : année à étudier
+
+    Returns:
+        Une liste contenant les recettes des films par distributeur de films.
+"""
 def getRecettesByDistributor(year): 
     if int(year)<2007 :
         year_dict = {'year': {"$gt": 0}}
@@ -361,7 +475,15 @@ def accueil():
 
     return render_template('accueil.html')
 
-
+"""
+    Page "movie-detail".
+    Permet d'afficher les détails (durée, distributeur, réalisateur, note, budget, recettes, résumé, genre(s), date de sortie, pays d'origine) du film choisi.
+    Affiche aussi trois graphes : 
+        - les recettes cumulées par semaine du film ;
+        - les recettes par semaine du film ;
+        - l'évolution de son classement par semaine.
+    Ainsi que l'affichage du casting des acteurs.
+"""
 @app.route('/movie-detail/<rlId>')
 def movie_detail(rlId):
     details = getMovieDetail(rlId)
@@ -401,6 +523,12 @@ def movie_detail(rlId):
 
     return render_template('movie_detail.html', details=details,graphJSON_cumul=graphJSON_cumul,graphJSON_recettes=graphJSON_recettes,graphJSON_rank=graphJSON_rank,graphJSON_cinemas=graphJSON_cinemas)
 
+
+"""
+    Page "Classement des films".
+    Permet d'afficher le classement des films en fonction de l'année à étudier qui se choisie en déroulant le menu en haut à droite et à valider en cliquant sur "Go".
+    Il est aussi possible de choisir "Tous les temps" pour avoir le classement général toutes années confondues.
+"""
 @app.route('/movie-ranking', methods= ['GET'])
 def movie_ranking():
     form = yearForm()
@@ -409,20 +537,24 @@ def movie_ranking():
         year =  0
 
     if  int(year) < 2007 :
-        title = "Classement des revenus  depuis 2007"
+        title = "Classement des revenus depuis 2007"
     else:
         title = "Classement des revenus pour l'année "+year
 
     return render_template('ranking_movies.html', form=form,title=title, list=getMovieRanking(year))
 
-
+"""
+    Page "Recherche des films".
+    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché est ceux dans la base de données.
+    Affiche les films correspondants au nom mis en recherche.
+"""
 @app.route('/movie-search', methods= ['GET'])
 def movie_search():
     form = textForm()
     
     text  = request.args.get('input')
     if text != None : 
-        title = "Résultats de  recherches pour : "+text+""
+        title = "Résultats de recherche pour : "+text+""
         list=searchMovies(text)
     else : 
         text=""
@@ -432,7 +564,11 @@ def movie_search():
 
     return render_template('movie_search.html',title=title, form=form,list=list)
 
-
+"""
+    Page "Recherche d'acteurs".
+    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché est ceux dans la base de données.
+    Affiche les acteurs correspondants au nom mis en recherche.
+"""
 @app.route('/actor-search', methods= ['GET'])
 def actor_search():
     form = textForm()
@@ -443,7 +579,7 @@ def actor_search():
         list=searchActor(text)
     else : 
         text=""
-        title  = "Recherche d'un acteur"
+        title  = "Recherche d'un(e) acteur/actrice"
         list=[]
 
 
@@ -454,6 +590,10 @@ def orderMovieDetail(movies):
     movies = sorted(movies, key=lambda d: datetime.strptime(d["rlDate"], '%b %d, %Y'),reverse=True)     
     return movies
 
+"""
+    Page "actor-detail".
+    Permet d'afficher les détails sur l'acteur/actrice choisi(e).
+"""
 @app.route('/actor-detail/<actorName>/<actorId>')
 def actor_detail(actorName,actorId):
 
@@ -480,7 +620,7 @@ def actor_detail(actorName,actorId):
 
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.line(df, x="year", y="recettes", title='Recettes générée par an',labels={
+    fig = px.line(df, x="year", y="recettes", title='Recettes générées par an',labels={
                      "recettes": "Recettes, en $",
                      "year": "Année"
                  }, markers=True)  
@@ -489,7 +629,11 @@ def actor_detail(actorName,actorId):
 
     return render_template('actor_detail.html',actorName = actorName,details=details,sum_recettes_fr=sum_recettes_fr,sum_recettes_inter=sum_recettes_inter,genres_counter=genres_counter,graphJSON_genres=graphJSON_genres,graphJSON_evolution=graphJSON_evolution)
 
-
+"""
+    Page "Classement des acteurs".
+    Permet d'afficher le classement des films en fonction de l'année à étudier qui se choisie en déroulant le menu en haut à droite et à valider en cliquant sur "Go".
+    Il est aussi possible de choisir "Tous les temps" pour avoir le classement général toutes années confondues.
+"""
 @app.route('/actor-ranking', methods= ['GET'])
 def actor_ranking():
     form = yearForm()
@@ -505,7 +649,15 @@ def actor_ranking():
 
     return render_template('ranking_actor.html', form=form,title=title, list=getActorRanking(year))
 
-
+"""
+    Page "Autres classements".
+    Permet d'afficher des bar charts en fonction de l'année tels que : 
+        - les recettes générées par genre ;
+        - les recettes générées en fonction de la note IMDB des films ;
+        - les recettes générées par semaine ;
+        - les recettes générées par distributeur de films.
+    Il est possible de sélectionner l'année pour laquelle nous voulons tracer les bar charts, il est aussi possible de tracer ces bar charts pour tous les temps.
+"""
 @app.route('/other-ranking', methods= ['GET'])
 def other_ranking():
     form = yearForm()
@@ -519,6 +671,7 @@ def other_ranking():
     else:
         title = "Classement divers pour l'année "+year
 
+    # Trace un bar chart des recettes générées en fonction du genre des films.
     recettesGenre = getRecettesByGenres(year)
     df = pd.DataFrame(recettesGenre)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
@@ -529,6 +682,7 @@ def other_ranking():
     fig.update_xaxes(tickangle=45)
     graphJSON_genres = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # Trace un bar chart des recettes générées en fonction de la note IMDB du film.
     recettesNote = getRecettesByNote(year)
     df = pd.DataFrame(recettesNote)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
@@ -538,6 +692,7 @@ def other_ranking():
                  })  
     graphJSON_note = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # Trace un bar chart des recettes générées en fonction des semaines.
     recettesWeek = getRecettesByWeek(year)
     df = pd.DataFrame(recettesWeek)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
@@ -547,11 +702,12 @@ def other_ranking():
                  })  
     graphJSON_week = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # Trace un bar chart des recettes générées en fonction du distributeur de films.
     recettesDistributor = getRecettesByDistributor(year)
     df = pd.DataFrame(recettesDistributor)
     df = df.query("_id != 'N/A'")
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par distributeur',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par distributeur de films',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Distibuteur"
                  })  
@@ -582,4 +738,5 @@ def loginDataBase():
 
 if __name__ == '__main__':
     collection = loginDataBase()
+    
     app.run(debug=True,host="0.0.0.0" ,port=8050) 
