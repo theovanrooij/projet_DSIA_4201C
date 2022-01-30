@@ -129,19 +129,41 @@ def getActorDetail(actorName,actorId):
                                                                                                                        }}}]))
     return cur[0]
 
+
+
 def getActorEvolution(actorName,actorId) :
 
-    cur = cur = list(collection.aggregate([ 
-                           {"$match":
+    cur =list(collection.aggregate( [
+            {"$match":
     {"$and": [
         {"mainCast.name":actorName  },
         {"mainCast.actorId":actorId},
-    ]}},{"$group" : {"_id" : {"year":"$year","title":"$title"},"recettes" : {"$sum":"$recettes"}}}, {"$group" : {"_id" : "$_id.year","recettes" : {"$sum":"$recettes"}}}, 
-    { "$sort" : { "_id" : 1 } }                  
-                          ]))
+    ]}},
+        {"$group":{
+            "_id": {"actor":actorName,"actorId":actorId}, "movies" :{
+                "$addToSet" : {"title":"$title","rlId":"$releaseID"}}}
+        }
+        ] ))
+        
+    ids = [movie["rlId"] for movie in cur[0]["movies"]]
+    curbis = list(collection.aggregate( [
+            {"$match": {"releaseID":{"$in":ids}} },
+        {"$group":{
+            "_id": {"year":"$year","title":"$title","rlId":"$releaseID"},"title":{"$first":"$title"},"year":{"$first":"$year"},"rlId":{"$first":"$releaseID"},"recettes":{"$max":"$recettes_cumul"}}},
+    
+        ] ))
+    
+    df = pd.DataFrame(curbis)
+    for id in ids : 
+        quer = df.query("rlId == '"+id+"'")
+        if len(quer) == 2:
+            max_year = max(quer["year"])
+            row_max = df.query("rlId == '"+id+"' & year == "+str(max_year))["recettes"].index[0]
+            row_max_previous = df.query("rlId == '"+id+"' & year == "+str(max_year-1))["recettes"].index[0]
+            df.loc[row_max,"recettes"] -= df.loc[row_max_previous,"recettes"]
+    df = df.groupby("year").sum().reset_index()
 
-    return cur
-
+    return df
 
 def getSumRecettesActor(actorName,actorId):
     if actorName == "" :
@@ -156,6 +178,36 @@ def getActorRanking(year):
     year=int(year)
     if year<2007 :
         year_dict = {'year': {"$gt": 0}}
+        return list(collection.aggregate( [
+            {"$match" :year_dict},
+        {
+        "$unwind": { "path": "$mainCast" }
+        },
+        {
+        "$group":
+        {
+            "_id": {"actor":"$mainCast.name","actorId":"$mainCast.actorId"},
+            "movies" :{
+                "$addToSet" : {"title":"$title","recettes":"$recettes_totales"}
+            }
+        }
+        },
+        {
+            "$unwind": "$movies"
+        }
+        ,
+        {
+        "$group":
+        {
+            "_id": {"actor":"$_id.actor","actorId":"$_id.actorId"},
+            "recettes" :{
+                "$sum" : "$movies.recettes"
+            }
+        }
+        },
+        { "$sort" : { "recettes" : -1 } }
+
+        ] ))
     else : 
         year_dict  = {'year': year}
 
@@ -168,7 +220,7 @@ def getActorRanking(year):
         }
         ] ))
 
-    movie_ranking = pd.DataFrame(getMovieRanking(2021))
+    movie_ranking = pd.DataFrame(getMovieRanking(year))
 
     for actor in main :
         recettes = 0
@@ -340,15 +392,13 @@ def actor_detail(actorName,actorId):
     graphJSON_genres = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
-    evolution = getActorEvolution(actorName,actorId)
-
-    df = pd.DataFrame(evolution)
+    df = getActorEvolution(actorName,actorId)
 
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.line(df, x="_id", y="recettes", title='Recettes générée par an',labels={
+    fig = px.line(df, x="year", y="recettes", title='Recettes générée par an',labels={
                      "recettes": "Recettes, en $",
-                     "_id": "Année"
+                     "year": "Année"
                  }, markers=True)  
     graphJSON_evolution = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
