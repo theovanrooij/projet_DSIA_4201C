@@ -253,7 +253,7 @@ def getActorDetail(actorName,actorId):
 """
 def getActorEvolution(actorName,actorId) :
     
-    # On commence par récupérer touss les films dans lesquels l'acteur a joué
+    # Nous commençons par récupérer tous les films dans lesquels l'acteur/actrice a joué
     cur =list(collection.aggregate( [
             {"$match":
     {"$and": [
@@ -266,7 +266,7 @@ def getActorEvolution(actorName,actorId) :
         }
         ] ))
         
-    # On récupère l'id de chaacun des films et pour chacun on vient récupérer son nom et ses recettes
+    # Nous récupérons l'id de chacun des films et pour lesquels nous venons récupérer son nom et ses recettes.
     ids = [movie["rlId"] for movie in cur[0]["movies"]]
     curbis = list(collection.aggregate( [
             {"$match": {"releaseID":{"$in":ids}} },
@@ -276,8 +276,8 @@ def getActorEvolution(actorName,actorId) :
     
         ] ))
     
-    # On met tout ça dans un DataFrame puis on regarde si il y a des films en doublons
-    # Si  tel est le cas, cela signifie qu'un film est sorti en fin d'année et on retire à l'année maximale la valeur de la minimale
+    # Nous mettons tout cela dans un DataFrame, puis nous regardons s'il y a des films en doublons.
+    # Si tel est le cas, cela signifie qu'un film est sorti en fin d'année. Nous le retirons à l'année maximale la valeur de la minimale
     df = pd.DataFrame(curbis)
     for id in ids : 
         quer = df.query("rlId == '"+id+"'")
@@ -322,7 +322,7 @@ def getSumRecettesActor(actorName,actorId):
 """
 def getActorRanking(year):
     year=int(year)
-    # Si on veut toutes les aannées il suffit de faire lee somme sur chaaque film
+    # Si on veut toutes les années, il suffit de faire la somme sur chaque film.
     if year<2007 :
         year_dict = {'year': {"$gt": 0}}
         return list(collection.aggregate( [
@@ -356,7 +356,7 @@ def getActorRanking(year):
 
         ] ))
     else : 
-        # En revanche si on étudie une année partiiculière on vient récupérer la liste des films de l'année puis leur recettes sur cette année avec la fonction getMovieRanking définie précédemment
+        # En revanche si nous souhaitons étudier une année particulière, nous venons récupérer la liste des films de l'année, puis leur recettes sur cette année avec la fonction getMovieRanking définie précédemment.
         year_dict  = {'year': year}
 
     main =list(collection.aggregate( [
@@ -370,7 +370,7 @@ def getActorRanking(year):
 
     movie_ranking = pd.DataFrame(getMovieRanking(year))
 
-    # Il ne reste après plus qu'à faire la somme des recettes et les trier
+    # Il ne reste après plus qu'à faire la somme des recettes et les trier.
     for actor in main :
         recettes = 0
         for movie in actor["movies"] :
