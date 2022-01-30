@@ -15,17 +15,35 @@ from forms import yearForm,textForm
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret key'
 
-years_possible = list()
-for year in range(2010,2022) :
-    years_possible.append({'label':str(year),'value':str(year)})
 
+"""
+    Convertit une somme d'argent d'un entier vers une string au format monétaire pour etre lisible
+    Le décorateur de la fonction la rend accessible depuis les templates html
 
+    Args:
+
+        money : somme à convertir. C'est un entier
+
+    Returns:
+        La somme au bon format. Type string
+"""
 @app.context_processor
 def utility_processor():
     def format_money(money):
         return '${:,.2f}'.format(money)
     return dict(format_money=format_money)
 
+"""
+    Convertit une durée en minutes vers le format _h_mins.
+    Le décorateur de la fonction la rend accessible depuis les templates html
+
+    Args:
+
+        time : durée à convertir. C'est un entier
+
+    Returns:
+        La durée au bon format. Type string
+"""
 @app.context_processor
 def utility_processor():
     def format_time(time):
@@ -34,6 +52,18 @@ def utility_processor():
     return dict(format_time=format_time)
 
 
+"""
+    Permet d'obtenir le pourcentage des recettes réalisé en France à partir de la valeur des recettes françaises et mondiales
+    Le décorateur de la fonction la rend accessible depuis les templates html
+
+    Args:
+
+        recettes_fr : Recettes en France
+        recettes_inter : Recettes dans le monde
+
+    Returns:
+        Le pourcentage des recettes réalisé en France
+"""
 @app.context_processor
 def utility_processor():
     def get_percentage(recettes_fr,recettes_inter):
@@ -44,23 +74,40 @@ def utility_processor():
 
 
 
+"""
+    Permet d'obtenir le classement des films ayant généré le plus d'argent en France pour une année choisie.
 
-def getMovieRanking(year=2021):
+    Args:
+
+        year : Année à étudier
+
+    Returns:
+        Une liste contenant ayant pour éléments les films dans l'ordre souhaité. Chaque élément est un diction contenant le nom du film, son releaseId et ses recettes
+"""
+def getMovieRanking(year=2022):
+    
+    # On commence par générer le dictionnaire filttrant les éléments selon l'année souhaitée
     year = int(year)
+    # Si l'année est inférieure à la valeur miinimale préseente dans la BDD, on sélectionne toutes les années
     if year<2007 :
         year_dict = {'year': {"$gt": 0}}
     else : 
         year_dict  = {'year': year}
         year_dict_sub  = {'year': year-1}
 
+    # On commence par récupérer toutes les données de l'année passé en paramètre
     movieMain = list(collection.aggregate([  
         {"$match": year_dict },
+        # On sélectionne la valeur maxiimaale des recettes cumulée sur l'année pour chaque film
         {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID","rlDate":"$releaseDate"},"recettes":{"$max":"$recettes_cumul"}}},
+        # On dégroupe l'id pour l'exploiiterr facilement dans un DataFrame
         {"$group" : {"_id" : "$_id.rlid","title":{ "$first": "$_id.title" },"Recettes totales":{ "$first": "$recettes" },"rlDate":{ "$first": "$_id.rlDate" }}},
         { "$sort" : { "Recettes totales" : -1 } }
             ]))
 
-    if year > 2007 :
+    # Si on étudie une année en particulier, on vient récupérer les données de l'année précédentes pour soustraaire les recettes des fiilms sortiees en fin d'année.
+    # On fait cela car paar défaut la requetre précédente inclue les recettes des deux annéees.
+    if year > 2008 :
         movie_id = [movie["_id"]for movie in movieMain]
         movieSub = list(collection.aggregate([  
             {"$match": year_dict_sub },
@@ -69,8 +116,8 @@ def getMovieRanking(year=2021):
             { "$sort" : { "Recettes totales" : -1 } }
                 ]))
         
-    # 2022 - 2021
 
+        # On vient ensuite réaliser la soustraction des deux années pour avoiir les réelles recettees des films chevauchant deux années
 
         dfSub = pd.DataFrame(movieSub)
 

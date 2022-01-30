@@ -1,11 +1,11 @@
-AJOUTER %age fr vs inter pour film / acteur
-regex acteur
-regardez pour vrai sous par an pour acteur
-
 =========================
 Projet de DataEngineering
 =========================
 
+
+Nous avons choisi d'étudier les données de BoxOffice en France. Ces données sont issues du site suivant :
+ `https://www.boxofficemojo.com/ <https://www.boxofficemojo.com/>`_
+A ces données, on vient ajouter plus de détails sur le film extraits depuiis sa page IMDB : `https://www.imdb.com/ <https://www.imdb.com/>`_
 
 Lancement de l'application
 ==========================
