@@ -26,7 +26,7 @@ Nous vous conseillons de lancer l'application et de profiter du temps de constru
 
 Rendez-vous ensuite sur `http://localhost:8050 <http://localhost:8050/>`_
 
-Il se peut que parfois les fichiers bash ne s'éxécute pas correctement et génère des erreurs dans les logs de app et mongo_feed  avec une mauvais  fin de fichier ou *\r commande inconnue*. Cela est du aux différents formats de sauvegarde entre windows et linux. Il faut donc forcer le format LF pour *app/launchApp* et *mongo_feed/feed*. 
+Il se peut que parfois les fichiers bash ne s'éxécute pas correctement et génère des erreurs dans les logs de app et mongo_feed  avec une mauvais  fin de fichier ou * "\r commande inconnue " *. Cela est du aux différents formats de sauvegarde entre windows et linux. Il faut donc forcer le format LF pour *app/launchApp* et *mongo_feed/feed*. 
 Tutoriel pour le faire : https://dev.to/wagslane/how-to-get-consistent-line-breaks-in-vs-code-lf-vs-crlf-2c3p
 
 Developper guide
