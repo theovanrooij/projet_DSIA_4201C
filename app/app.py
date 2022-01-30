@@ -34,6 +34,16 @@ def utility_processor():
     return dict(format_time=format_time)
 
 
+@app.context_processor
+def utility_processor():
+    def get_percentage(recettes_fr,recettes_inter):
+
+        return int(recettes_fr/recettes_inter*100)
+    return dict(get_percentage=get_percentage)
+
+
+
+
 
 def getMovieRanking(year=2021):
     year = int(year)
@@ -85,22 +95,20 @@ def searchMovies(searchName):
     return cur
 
 
-def getActorMovies(actorName):
+def searchActor(actorName):
     if actorName == "" :
-        return []
+        return [0]
     cur = list(collection.aggregate([  {"$match":
-    {"$and": [
-        {"cast.name":actorName  },
-    ]}},
+        {"cast.name": {'$regex':  actorName}   },
+    },
      {
          "$unwind": "$cast"
      }
     ,
     {"$match":
-    {"$and": [
-        {"cast.name":actorName  },
-    ]}},
-        {"$group" : {"_id" : {"actorId":"$cast.actorId","actor":"$cast.actor","img_link": "$cast.img_link"},"movies": {"$addToSet": {"title":"$title","rlID":"$releaseID"} }}}]))
+        {"cast.name": {'$regex':  actorName}   },
+    },
+        {"$group" : {"_id" : {"actorId":"$cast.actorId","actorName":"$cast.name","img_link": "$cast.img_link"},"movies": {"$addToSet": {"title":"$title","rlID":"$releaseID"} }}}]))
 
     return cur
 
@@ -372,7 +380,7 @@ def actor_search():
     text  = request.args.get('input')
     if text != None : 
         title = "Résultats de recherches pour : "+text+""
-        list=getActorMovies(text)
+        list=searchActor(text)
     else : 
         text=""
         title  = "Recherche d'un acteur"

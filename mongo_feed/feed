@@ -19,7 +19,7 @@ if test -f "$FILE"; then
     fi
     else
     echo "need feeding"
-    dl_feed
+    dl_feed 
 fi
 
 # On vient dl les dernières modifs

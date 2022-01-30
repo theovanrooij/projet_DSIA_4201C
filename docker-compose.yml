@@ -27,7 +27,7 @@ services:
     depends_on:
       - mongo_app
     volumes:
-      - ./app/mongo_data:/home/data
+      - ./mongo_feed:/home/data
       - ./scrapy_folder:/home/scrapy_folder
 
   app:
@@ -45,5 +45,6 @@ services:
     volumes:
       - ./app:/home/app
       - ./scrapy_folder:/home/scrapy_folder
+      - ./mongo_feed:/home/mongo_data
     environment:
       FLASK_ENV: development

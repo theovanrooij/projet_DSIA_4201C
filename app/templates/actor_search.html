@@ -10,7 +10,7 @@
 
 {% for elt in list %}
     <div class="elt_container" >
-        <a class="elt_title" href="/actor-detail/{{actor}}/{{elt['_id']['actorId']}}" >{{actor}}</a>
+        <a class="elt_title" href="/actor-detail/{{actor}}/{{elt['_id']['actorId']}}" >{{elt['_id']['actorName']}}</a>
         <img src="{{elt['_id']['img_link']}}" alt="Photo de {{actor}}" class="elt_picture">
         <p>| 
             {% for movie in elt["movies"] %}  

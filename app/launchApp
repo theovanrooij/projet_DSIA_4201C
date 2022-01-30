@@ -8,4 +8,4 @@ python launchSpider.py
 
 cd /home/app 
 
-python app.py
+python app.py 

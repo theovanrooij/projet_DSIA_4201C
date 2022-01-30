@@ -5,11 +5,11 @@ from time import sleep
 
 
 # # read nb and compare, if inferior, launch update else run app
-while not os.path.isfile("/home/app/mongo_data/nb.txt"):
+while not os.path.isfile("/home/mongo_data/nb.txt"):
     print("Does not exist")
     sleep(1)
 
-with open('/home/app/mongo_data/nb.txt') as f:
+with open('/home/mongo_data/nb.txt') as f:
     nbDocumentsVoulu = f.readlines()
 
 import pymongo

@@ -3,3 +3,4 @@ data/*
 *.bson
 nb.txt
 .Trash-0
+__pycache__/

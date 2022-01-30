@@ -11,8 +11,8 @@
     
     <div class="summary_list">
         <h1>{{ actorName }}</h1> 
-        <p>Argent généré à l'international par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_inter) }}</p> <br>
-        <p>Argent généré en France par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_fr) }}</p> <br>
+        <p>Argent généré au total par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_inter) }}</p> <br>
+        <p>Argent généré en France par les films dans lequel il est un  acteur principal : {{ format_money(sum_recettes_fr) }} ( {{ get_percentage(sum_recettes_fr,sum_recettes_inter) }} % des recettes totales ) </li></p> <br>
        
        
         
