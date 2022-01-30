@@ -1,3 +1,5 @@
+
+# Importation des packages nécessaires
 from datetime import datetime
 from time import sleep
 from flask import Flask, flash, send_from_directory,redirect, render_template, request, url_for
@@ -17,8 +19,8 @@ app.config['SECRET_KEY'] = 'secret key'
 
 
 """
-    Convertit une somme d'argent d'un entier vers une string au format monétaire pour etre lisible
-    Le décorateur de la fonction la rend accessible depuis les templates html
+    Convertit une somme d'argent d'un entier vers une string au format monétaire pour être lisible.
+    Le décorateur de la fonction la rend accessible depuis les templates html.
 
     Args:
 
@@ -35,14 +37,14 @@ def utility_processor():
 
 """
     Convertit une durée en minutes vers le format _h_mins.
-    Le décorateur de la fonction la rend accessible depuis les templates html
+    Le décorateur de la fonction la rend accessible depuis les templates html.
 
     Args:
 
-        time : durée à convertir. C'est un entier
+        time : durée à convertir. C'est un entier.
 
     Returns:
-        La durée au bon format. Type string
+        La durée au bon format. Type string.
 """
 @app.context_processor
 def utility_processor():
@@ -53,7 +55,7 @@ def utility_processor():
 
 
 """
-    Permet d'obtenir le pourcentage des recettes réalisé en France à partir de la valeur des recettes françaises et mondiales
+    Permet d'obtenir le pourcentage des recettes réalisées en France à partir de la valeur des recettes françaises et mondiales
     Le décorateur de la fonction la rend accessible depuis les templates html
 
     Args:
@@ -109,6 +111,7 @@ def getMovieRanking(year=2022):
     # On fait cela car paar défaut la requetre précédente inclue les recettes des deux annéees.
     if year > 2008 :
         movie_id = [movie["_id"]for movie in movieMain]
+
         movieSub = list(collection.aggregate([  
             {"$match": year_dict_sub },
             {"$match": {"releaseID":{"$in":movie_id}} },
@@ -132,6 +135,16 @@ def getMovieRanking(year=2022):
     return cur
 
 
+"""
+    Permet d'obtenir tous les documents d'un film en fonction de son id de release
+
+    Args:
+
+        rlId : Id de la realease à récupérrer
+
+    Returns:
+        Une liste contenant tous les documents d'un film
+"""
 def getMovieDetail(rlId):
     cur = list(collection.find({"releaseID":rlId}).sort( [("year",1),("week",1)]))
     return cur
