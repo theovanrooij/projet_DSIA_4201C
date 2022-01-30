@@ -47,3 +47,9 @@ footer {
     justify-content: space-around;
     flex-wrap: wrap;
 }
+
+.accueil-p {
+    text-align: center;
+    height: 100%;
+    margin-top: 35vh;
+}

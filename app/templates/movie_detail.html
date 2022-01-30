@@ -11,12 +11,11 @@
         <ul class="summary_list">
             <li>Durée : {{format_time(details[0]["runningTime"])}}</li>
             <li>Distributeur : {{details[0]["distributor"]}}</li>
-            <li>Réalisateur : {{details[0]["director"]}}</li>
+            <li>Réalisateur : <a href='/realisateur-detail/{{details[0]["director"]["name"]}}/{{details[0]["director"]["directorId"]}}'>{{details[0]["director"]["name"]}}</a></li>
             <li>Note : {{details[0]["note"]}}</li>
             <li>Budget : {{ details[0]["budget"] }}</li>
             <li>Recettes totales : {{ format_money(details[0]["recettes_inter"]) }}</li>
             <li>Recettes en France : {{ format_money(details[0]["recettes_totales"]) }} ( {{ get_percentage(details[0]["recettes_totales"],details[0]["recettes_inter"]) }} % des recettes totales ) </li>
-            <li>Pourcentage des recettes réalisées en France : {{ details[0]["recettes_totales"] / details[0]["recettes_inter"] * 100}} </li>
             <li>Résumé : {{details[0]["resume"] | safe}}</li>
             <li>Genres : {{ ', '.join(details[0]["genres"])}}</li>
             <li>Date de sortie : {{details[0]["releaseDate"]}}</li>

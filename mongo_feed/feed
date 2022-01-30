@@ -22,8 +22,4 @@ if test -f "$FILE"; then
     dl_feed 
 fi
 
-# On vient dl les dernières modifs
-pwd
-cd /home/scrapy_folder & python launchSpider.py
-
 

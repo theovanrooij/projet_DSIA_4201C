@@ -1,0 +1,23 @@
+{% extends "base.html" %} <!--reprend le contenu de la template base.html-->
+{% block title %}{{ title }}{% endblock %} <!--remplace le contenu du bloc title de base-->
+{% block css %}<link rel="stylesheet" href="/static/ranking.css">{% endblock %} <!--remplace le contenu du bloc title de base-->
+
+
+
+{% block content %} <!--remplace le contenu du bloc content-->
+
+
+<div class="title_div"><h1>{{ title }}</h1> {% include 'select_form.html' %}</div>
+
+
+
+<table>
+    {% for elt in list %}
+        <tr>
+            <td class="rank">{{ loop.index }}</td>
+            <td class="title"><a href='/realisateur-detail/{{ elt["_id"]["name"] }}/{{ elt["_id"]["directorId"] }}'>{{ elt["_id"]["name"] }}</a></td>
+            <td class="recettes">{{ format_money( elt["recettes"]) }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %} <!--remplace le contenu du bloc content-->

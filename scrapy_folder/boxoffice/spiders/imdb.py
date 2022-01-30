@@ -15,7 +15,7 @@ class ImdbSpider(scrapy.Spider):
     }
 
     
-    def  getActorId(self,url):
+    def  getPersonId(self,url):
         actorId = url
         if actorId != None :
             actorId = actorId.split("/")[2].split("?")[0]
@@ -86,7 +86,7 @@ class ImdbSpider(scrapy.Spider):
         
         #for mainActor in  response.css(".StyledComponents__CastItemSummary-sc-y9ygcu-9.hLoKtW>a"):
         for mainActor in  response.css(".StyledComponents__CastItemWrapper-sc-y9ygcu-7.esVIGD"):
-            mainCast.append({"name":mainActor.css("::text").extract_first(),"actorId":self.getActorId(mainActor.css("a::attr(href)").extract_first()) , "img_link":mainActor.css("img::attr(src)").extract_first()})
+            mainCast.append({"name":mainActor.css("::text").extract_first(),"actorId":self.getPersonId(mainActor.css("a::attr(href)").extract_first()) , "img_link":mainActor.css("img::attr(src)").extract_first()})
 
         req.meta["mainCast"] = mainCast
         
@@ -103,13 +103,16 @@ class ImdbSpider(scrapy.Spider):
         yield req
         
     def parse_credits(self, response):
-        director = response.css("#director+table a::text").extract_first()
+        directorName = response.css("#director+table a::text").extract_first()
+        directorId =self.getPersonId(response.css("#director+table a::attr(href)").extract_first())
+        
+        director = {"name":directorName,"directorId":directorId}
         cast = list()
         
         for actor in response.css(".cast_list>tr"):
             
 
-                cast.append({"name":actor.css(".primary_photo+td>a::text").extract_first(), "role" :actor.css(".character>a::text").extract_first(),"img_link":actor.css("img::attr(loadlate)").extract_first(),"actorId":self.getActorId(actor.css("a::attr(href)").extract_first())
+                cast.append({"name":actor.css(".primary_photo+td>a::text").extract_first(), "role" :actor.css(".character>a::text").extract_first(),"img_link":actor.css("img::attr(loadlate)").extract_first(),"actorId":self.getPersonId(actor.css("a::attr(href)").extract_first())
                 })
             
         yield IMDBItem(title = response.meta.get("title"),

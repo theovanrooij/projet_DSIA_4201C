@@ -200,6 +200,27 @@ def searchActor(actorName):
 
     return cur
 
+
+
+
+"""
+    Permet d'effectuer une recherche pour retrouver un réalisateur
+    Args: 
+        directorName : nom entré pour lequel nous allons chercher des correspondances dans les noms des réalisateurs
+    Returns:
+        Une liste contenant les résultats de recherche des réalisateurs.
+"""
+def searchRealisateur(directorName):
+    if directorName == "" :
+        return [0]
+    cur = list(collection.aggregate([  {"$match":
+        {"director.name": {'$regex':  directorName}   },
+    },
+        {"$group" : {"_id" : {"directorId":"$director.directorId","directorName":"$director.name"},"movies": {"$addToSet": {"title":"$title","rlID":"$releaseID"} }}}]))
+
+    return cur
+
+
 """
     Permet d'obtenir les détails sur un(e) acteur/actrice tels que :
         - l'argent généré au total par les films dans lequel il/elle est un(e) acteur/actrice principal(e) ; 
@@ -211,7 +232,6 @@ def searchActor(actorName):
 
         actorName : nom de l'acteur/actrice dont nous voulons connaître les détails
         actorId : ID de l'acteur/actrice (puisque plusieurs acteurs peuvent avoir le même nom, un ID les différencie)
-
     Returns:
         Une liste contenant les détails (argent généré, recettes par années, film(s) dans le(s)quel(s) il/elle a joué) de l'acteur/actrice choisi.
 """
@@ -239,8 +259,23 @@ def getActorDetail(actorName,actorId):
                                                                                                                        }}}]))
     return cur[0]
 
+def getRealisateurDetail(directorName,directorId):
 
-"""
+
+    if directorName == "" :
+        return []
+    cur = list(collection.aggregate([ {"$match":
+    {"$and": [
+        {"director.name":directorName  },
+        {"director.directorId":directorId},
+    ]}},
+        {"$group" : {"_id" : {"actorId":"$director.directorId","directorName":"$director.name"}, "movies": {"$addToSet": {"title":"$title","rlid":"$releaseID",
+                                                                                                                                    "poster":"$poster","rlDate":"$releaseDate","recettes_totales":"$recettes_totales",
+                                                                                                                                    "recettes_inter":"$recettes_inter","genres":"$genres"},
+                                                                                                                       }}}]))
+    return cur[0]
+  
+  """
     Permet d'afficher l'évolution des recettes de l'acteur/actrice voulu en France.
 
     Args:
@@ -291,6 +326,42 @@ def getActorEvolution(actorName,actorId) :
     return df
 
 
+def getRealisateurEvolution(directorName,directorId) :
+
+    cur =list(collection.aggregate( [
+            {"$match":
+    {"$and": [
+        {"director.name":directorName  },
+        {"director.directorId":directorId},
+    ]}},
+        {"$group":{
+            "_id": {"director":directorName,"directorId":directorId}, "movies" :{
+                "$addToSet" : {"title":"$title","rlId":"$releaseID"}}}
+        }
+        ] ))
+        
+    ids = [movie["rlId"] for movie in cur[0]["movies"]]
+    curbis = list(collection.aggregate( [
+            {"$match": {"releaseID":{"$in":ids}} },
+        {"$group":{
+            "_id": {"year":"$year","title":"$title","rlId":"$releaseID"},"title":{"$first":"$title"},"year":{"$first":"$year"},"rlId":{"$first":"$releaseID"},"recettes":{"$max":"$recettes_cumul"}}},
+    
+        ] ))
+    
+    df = pd.DataFrame(curbis)
+    for id in ids : 
+        quer = df.query("rlId == '"+id+"'")
+        if len(quer) == 2:
+            max_year = max(quer["year"])
+            row_max = df.query("rlId == '"+id+"' & year == "+str(max_year))["recettes"].index[0]
+            row_max_previous = df.query("rlId == '"+id+"' & year == "+str(max_year-1))["recettes"].index[0]
+            df.loc[row_max,"recettes"] -= df.loc[row_max_previous,"recettes"]
+    df = df.groupby("year").sum().reset_index()
+
+    return df
+
+
+
 """
     Permet d'obtenir les recettes engendrés par un(e) acteur/actrice en France et dans le monde.
 
@@ -309,6 +380,17 @@ def getSumRecettesActor(actorName,actorId):
             {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID", "recettes_totales" : "$recettes_totales","recettes_inter":"$recettes_inter"}}} ]))
 
     return cur
+
+
+def getSumRecettesRealisateur(directorName,directorId):
+    if directorName == "" :
+        return []
+    cur = list(collection.aggregate([  {"$match":{"director.directorId": directorId },},
+            {"$group" : {"_id" : {"title":"$title","rlid":"$releaseID", "recettes_totales" : "$recettes_totales","recettes_inter":"$recettes_inter"}}} ]))
+
+    return cur
+
+
 
 """
     Permet d'obtenir le classement de l'acteur/actrice en France pour une année choisie.
@@ -379,6 +461,68 @@ def getActorRanking(year):
     main = sorted(main, key=lambda d: d['recettes'],reverse=True) 
     return main
     
+"""
+    Permet d'obtenir le classement du réalisateur en France pour une année choisie.
+    Args:
+        year : année à étudier
+    Returns:
+        Classement du réalisateur pour l'année choisie.
+"""
+def getRealisateurRanking(year):
+    year=int(year)
+    if year<2007 :
+        year_dict = {'year': {"$gt": 0}}
+        return list(collection.aggregate( [
+            {"$match" :year_dict},
+        
+        {
+        "$group":
+        {
+            "_id":{"name":"$director.name",'directorId':"$director.directorId"},
+            "movies" :{
+                "$addToSet" : {"title":"$title","recettes":"$recettes_totales"}
+            }
+        }
+        },
+        {
+            "$unwind": "$movies"
+        }
+        ,
+        {
+        "$group":
+        {
+            "_id":{"name":"$_id.name",'directorId':"$_id.directorId"},
+            "recettes" :{
+                "$sum" : "$movies.recettes"
+            }
+        }
+        },
+        { "$sort" : { "recettes" : -1 } }
+
+        ] ))
+    else : 
+        year_dict  = {'year': year}
+
+    main =list(collection.aggregate( [
+            {"$match" :year_dict},
+        {"$group":{
+            "_id": "$director", "movies" :{
+                "$addToSet" : {"title":"$title","rlId":"$releaseID"}}}
+        }
+        ] ))
+
+    movie_ranking = pd.DataFrame(getMovieRanking(year))
+
+    for actor in main :
+        recettes = 0
+        for movie in actor["movies"] :
+            recettes += movie_ranking.query("_id == '"+movie["rlId"]+"'")["Recettes totales"].values[0]
+        actor["recettes"] = recettes
+        
+    main = sorted(main, key=lambda d: d['recettes'],reverse=True) 
+    return main
+  
+
 
 """
     Permet d'obtenir les recettes générées par genre en France pour une année choisie.
@@ -614,8 +758,9 @@ def actor_detail(actorName,actorId):
 
     
 
-    sum_recettes_fr = sum(movie["_id"]['recettes_totales'] for movie in getSumRecettesActor(actorName,actorId))
-    sum_recettes_inter = sum(movie["_id"]['recettes_inter'] for movie in getSumRecettesActor(actorName,actorId))
+    sum_recettes = getSumRecettesActor(actorName,actorId)
+    sum_recettes_fr = sum(movie["_id"]['recettes_totales'] for movie in sum_recettes)
+    sum_recettes_inter = sum(movie["_id"]['recettes_inter'] for movie in sum_recettes)
 
     # Dictionnaire affichant pour chaque genre le nombre de film dans lequel l'acteur a joué
     genres_counter = Counter(list(chain(*genres_list)))
@@ -630,14 +775,16 @@ def actor_detail(actorName,actorId):
 
 
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.line(df, x="year", y="recettes", title='Recettes générées par an',labels={
+realisateur
+    fig = px.bar(df, x="year", y="recettes", title='Recettes générées par an',labels={
                      "recettes": "Recettes, en $",
                      "year": "Année"
-                 }, markers=True)  
+                 })  
     graphJSON_evolution = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     return render_template('actor_detail.html',actorName = actorName,details=details,sum_recettes_fr=sum_recettes_fr,sum_recettes_inter=sum_recettes_inter,genres_counter=genres_counter,graphJSON_genres=graphJSON_genres,graphJSON_evolution=graphJSON_evolution)
+
 
 """
     Page "Classement des acteurs".
@@ -658,6 +805,88 @@ def actor_ranking():
         title = "Classement des revenus des acteurs pour l'année "+year
 
     return render_template('ranking_actor.html', form=form,title=title, list=getActorRanking(year))
+
+
+@app.route('/realisateur-detail/<directorName>/<directorId>')
+def realisateur_detail(directorName,directorId):
+
+
+    details = getRealisateurDetail(directorName,directorId)
+
+    details["movies"] = orderMovieDetail(details["movies"])
+
+    genres_list = []
+    for movie in details["movies"]:
+        genres_list.append(movie["genres"])
+
+    genres_counter = Counter(list(chain(*genres_list)))
+
+    sum_recettes = getSumRecettesRealisateur(directorName,directorId)
+
+    sum_recettes_fr = sum(movie["_id"]['recettes_totales'] for movie in sum_recettes)
+    sum_recettes_inter = sum(movie["_id"]['recettes_inter'] for movie in sum_recettes)
+
+    dict_genres = {"genres" : genres_counter.keys(),"values":genres_counter.values()}
+    fig = px.pie(dict_genres, names="genres", values='values',title="Répartition de ses genres de films favoris",color_discrete_sequence=px.colors.sequential.RdBu)
+    graphJSON_genres = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    df = getRealisateurEvolution(directorName,directorId)
+
+
+    # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
+    fig = px.bar(df, x="year", y="recettes", title='Recettes générées par an',labels={
+                     "recettes": "Recettes, en $",
+                     "year": "Année"
+                 })  
+    graphJSON_evolution = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    return render_template('realisateur_detail.html',directorName = directorName,details=details,sum_recettes_fr=sum_recettes_fr,sum_recettes_inter=sum_recettes_inter,genres_counter=genres_counter,graphJSON_genres=graphJSON_genres,graphJSON_evolution=graphJSON_evolution)
+
+
+""""
+    Page "Classement des réalisateurs".
+    Permet d'afficher le classement des réaliisateurs en fonction de l'année à étudier qui se choisie en déroulant le menu en haut à droite et à valider en cliquant sur "Go".
+    Il est aussi possible de choisir "Tous les temps" pour avoir le classement général toutes années confondues.
+"""
+@app.route('/realisateur-ranking', methods= ['GET'])
+def realisateur_ranking():
+    form = yearForm()
+    year  = request.args.get('input')
+    if year ==  None :
+        year =  0
+
+    if  int(year) < 2007 :
+        title = "Classement des revenus des réalisateurs depuis 2007"
+        year=0
+    else:
+        title = "Classement des revenus des réalisateurs pour l'année "+year
+
+    return render_template('ranking_realisateur.html', form=form,title=title, list=getRealisateurRanking(year))
+
+
+"""
+    Page "Recherche de réalisateurs".
+    Permet d'effectuer une recherche pour avoir une correspondance entre le nom cherché et ceux dans la base de données.
+    Affiche les réalisateurs correspondants au nom mis en recherche.
+"""
+@app.route('/realisateur-search', methods= ['GET'])
+def realisateur_search():
+    form = textForm()
+    
+    text  = request.args.get('input')
+    if text != None : 
+        title = "Résultats de recherches pour : "+text+""
+        list=searchRealisateur(text)
+    else : 
+        text=""
+        title  = "Recherche d'un réalisateur"
+        list=[]
+
+
+    return render_template('realisateur_search.html',title=title, form=form,realisateur=text,list=list)
+
 
 """
     Page "Autres classements".
@@ -685,7 +914,7 @@ def other_ranking():
     recettesGenre = getRecettesByGenres(year)
     df = pd.DataFrame(recettesGenre)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par genre',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par genre',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Genre"
                  })  
@@ -696,7 +925,7 @@ def other_ranking():
     recettesNote = getRecettesByNote(year)
     df = pd.DataFrame(recettesNote)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par note IMDB',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par note IMDB',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Note"
                  })  
@@ -706,7 +935,7 @@ def other_ranking():
     recettesWeek = getRecettesByWeek(year)
     df = pd.DataFrame(recettesWeek)
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
-    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par semaine de l\'année',labels={
+    fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes généréess par semaine de l\'année',labels={
                      "recettes_totales": "Recettes, en $",
                      "_id": "Semaine"
                  })  
@@ -717,7 +946,9 @@ def other_ranking():
     df = pd.DataFrame(recettesDistributor)
     df = df.query("_id != 'N/A'")
     # https://towardsdatascience.com/web-visualization-with-plotly-and-flask-3660abf9c946
+
     fig = px.bar(df, x="_id", y="recettes_totales", title='Recettes générées par distributeur de films',labels={
+
                      "recettes_totales": "Recettes, en $",
                      "_id": "Distibuteur"
                  })  
